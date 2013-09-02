@@ -27,24 +27,24 @@ EditableDocument.prototype.update = function() {
     this.history.pushEdit(edit)
   } else {
     this.masterLink.send('edit', edit.pack())
-    this.masterLink.ev.on('ack', function onack(id) {
+    this.masterLink.on('link:ack', function onack(id) {
       if(id == edit.id) {
         this.distributeEdit(edit)
         this.history.pushEdit(edit)
-        this.masterLink.ev.removeListener('ack', onack)
+        this.masterLink.removeListener('link:ack', onack)
       }
     }.bind(this))
   }
 }
 
 // overrides Document#applyEdit
-EditableDocument.prototype.applyEdit = function(edit, fromLink) {
+EditableDocument.prototype.applyEdit = function(edit) {
   // if there's a master link, Link#update waits for the master to acknoledge the new edits
   // else it pushes them to history directly, which means we can just transform against history
   this.update()
   
   if(!this.masterLink) {
-    // apply to shadowCopy and send ack and distribute edit
+    // apply to shadowCopy
     Document.prototype.applyEdit.call(this, edit, fromLink)
   }else{
     // XXX TODO : Dry things up here! This is really similar to Document#applyEdit!
@@ -56,7 +56,7 @@ EditableDocument.prototype.applyEdit = function(edit, fromLink) {
       edit.follow(pendingEdit)
     })
 
-    this.masterLink.queue.forEach(function(pendingEdit, i) {
+    this.masterLink.queue.forEach(function(pendingEdit, i) { // XXX obviously we need a queue in Link for this! Or rather, one sent and one unsent field. we can merge into unsent
       pendingEdit.transformAgainst(incomingEdit)
       if(0 == i && !this.masterLink.awaitingAck) pendingEdit.parent = edit.id
 
@@ -69,14 +69,7 @@ EditableDocument.prototype.applyEdit = function(edit, fromLink) {
       this.content = edit.changeset.apply(this.content)
       this._setContent(this.content) // XXX Bad for retaining selection!
     }catch(e) {
-      var er = new Error('Applying edit "'+edit.id+'" failed: '+e.message)
-      if(!fromLink) throw er
-      else fromlink.emit('error', er)
-      return
+      throw new Error('Applying edit "'+edit.id+'" failed: '+e.message)
     }
-
-    // send ack and forward
-    fromLink && fromLink.send('ack', edit.id)
-    this.distributeEdit(edit, fromLink)
   }
 }

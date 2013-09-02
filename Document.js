@@ -17,7 +17,7 @@ Document.create = function(content) {
   doc.content = content
   doc.history.pushEdit(
     Edit.newFromChangeset(
-      changesets.constructChangeset('', content)// This dictates that we use text only... :/
+      changesets.constructChangeset('', content)// This dictates that we use text only... :/ -- we could add some dummy first edit...
     )
   )
   return doc
@@ -41,26 +41,38 @@ Document.prototype.createMasterLink = function() {
   return link
 }
 
+// XXX Detach link!
+
 // XXX Prevent people from attaching the same link multiple times
 Document.prototype.attachLink = function(link) {
   // If we don't know the document yet, request its content
   if(null === this.content) link.send('requestInit')
   this.links.push(link)
 
-  link.ev.on('requestInit', function() {
+  link.on('link:requestInit', function() {
     link.send('init', {content: this.content, initialEdit: this.history.latest().pack()})
   }.bind(this))
 
   // XXX Usually you wouldn't want any link to be able to reset this document!
   // We need some way to determine whether we requested an init from that particular link!
-  link.ev.on('init', function(data) {
+  link.on('link:init', function(data) {
     this.content = data.content
     this.history.reset()
     this.history.pushEdit(Edit.unpack(data.initialEdit))
   }.bind(this))
 
-  link.ev.on('edit', function onedit(edit) { 
-    this.dispatchEdit(Edit.unpack(edit), link)
+  link.on('link:edit', function onedit(edit) { 
+    if(!this.masterLink || link === this.masterLink)
+      this.dispatchEdit(Edit.unpack(edit), link)
+    else {
+      // check with master
+      this.masterLink.send('edit', edit.pack())
+      this.masterLink.once('link:ack', function (id) {
+        if(id == edit.id) {
+          this.dispatchEdit(edit, link)
+        }
+      }.bind(this))
+    }
   }.bind(this))
 
   link.on('close', function onclose() {
@@ -68,6 +80,12 @@ Document.prototype.attachLink = function(link) {
   }.bind(this))
 }
 
+/**
+ * Dispatch a received edit
+ * 
+ * @param edit <Edit>
+ * @param fromLink <Link> (optional>
+ */
 Document.prototype.dispatchEdit = function(edit, fromLink) {
   // Have we already got this edit?
   if(this.history.remembers(edit.id))
@@ -75,24 +93,21 @@ Document.prototype.dispatchEdit = function(edit, fromLink) {
 
   // Check integrity of this edit
   if (!this.history.remembers(edit.parent)) {
-    fromLink && fromLink.send('error', new Error('Edit "'+edit.id+'" has unknown parent "'+edit.parent+'"'))
+    fromLink && fromLink.emit('error', new Error('Edit "'+edit.id+'" has unknown parent "'+edit.parent+'"'))
     return
   }
 
-  if(!this.masterLink || fromLink === this.masterLink) 
-    this.applyEdit(edit, fromLink)
-  else {
-    this.masterLink.send('edit', edit.pack())
-    this.masterLink.ev.on('ack', function onack(id) {
-      if(id == edit.id) {
-        this.applyEdit(edit, fromLink)
-        this.masterLink.ev.removeListener('ack', onack)
-      }
-    }.bind(this))
+  try {
+    this.applyEdit(edit)
+  }catch(e) {
+    if(!fromLink) throw er
+    else fromlink.emit('error', er)
   }
+  fromLink && fromLink.send('ack', edit.id)
+  this.distributeEdit(edit, fromLink)
 }
 
-Document.prototype.applyEdit = function(edit, fromLink) {
+Document.prototype.applyEdit = function(edit) {
   // Transform against possibly missed edits from history that have happened in the meantime
   this.history.getAllAfter(edit.parent)
     .forEach(function(oldEdit) {
@@ -104,20 +119,11 @@ Document.prototype.applyEdit = function(edit, fromLink) {
   try {
     this.content = edit.changeset.apply(this.content)
   }catch(e) {
-    var er = new Error('Applying edit "'+edit.id+'" failed: '+e.message)
-    if(!fromLink) throw er
-    else fromlink.emit('error', er)
-    return
+    throw new Error('Applying edit "'+edit.id+'" failed: '+e.message)
   }
 
   // add to history
-  this.history.pushEdit(edit)
-
-  // send ack
-  fromLink && fromLink.send('ack', edit.id)
-
-  // forward edit
-  this.distributeEdit(edit, fromLink)
+  this.history.pushEdit(edit) // XXX parent is wrong after all the transformations above
 }
 
 Document.prototype.distributeEdit = function(edit, fromLink) {
