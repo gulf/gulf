@@ -39,17 +39,20 @@ Document.prototype.createSlaveLink = function() {
 
 Document.prototype.createMasterLink = function() {
   var link = new Link
+  this.attachMasterLink(link)
+  return link
+}
+
+// XXX Detach link!
+
+Document.prototype.attachMasterLink = function(link) {
   this.attachLink(link)
   this.masterLink = link
 
   link.on('close', function() {
     this.masterLink = null
   }.bind(this))
-  
-  return link
 }
-
-// XXX Detach link!
 
 Document.prototype.attachSlaveLink = function(link) {
   this.slaves.push(link)
