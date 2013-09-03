@@ -1,7 +1,7 @@
 {
-  "name": "changesets",
-  "version": "0.2.7",
-  "description": "A Changeset library incorporating an operational transformation (OT) algorithm -- for node and the browser!",
+  "name": "umbilical",
+  "version": "0.0.0",
+  "description": "Sync anything!",
   "repository": {
     "type": "git",
     "url": "https://github.com/marcelklehr/changesets.git"
@@ -21,14 +21,15 @@
   ],
   "main": "./lib/index",
   "scripts": {
-    "test": "vows ./test/*"
+    "test": "mocha"
   },
   "dependencies": {
     "changesets": "*"
   , "emit-stream": "*"
   },
   "devDependencies": {
-    "vows": "*"
+    "mocha": "*"
+  , "expect.js": "*"
   },
   "author": "Marcel Klehr <mklehr@gmx.net>",
   "license": [{"type": "MIT", "url": "http://opensource.org/licenses/MIT"}],
