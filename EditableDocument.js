@@ -2,7 +2,8 @@ var Document = require('./Document')
   , Edit = require('./Edit')
   , changesets = require('changesets').text
 
-// XXX Must have a master link! (Why?)
+// XXX Must only have a master link! (Why?)
+// Because we need to take care of our own edits here, we don't want to mess with other docs' edits!
 function EditableDocument() {
   Document.call(this)
 }
@@ -22,54 +23,29 @@ EditableDocument.prototype.update = function() {
   var edit = Edit.newFromChangeset(cs)
   edit.parent = this.history.latest().id
 
-  if(!this.masterLink) {
+  this.masterLink.sendEdit(edit, function onack() {
     this.distributeEdit(edit)
     this.history.pushEdit(edit)
-  } else {
-    this.masterLink.send('edit', edit.pack())
-    this.masterLink.on('link:ack', function onack(id) {
-      if(id == edit.id) {
-        this.distributeEdit(edit)
-        this.history.pushEdit(edit)
-        this.masterLink.removeListener('link:ack', onack)
-      }
-    }.bind(this))
-  }
+  }.bind(this))
 }
 
 // overrides Document#applyEdit
-EditableDocument.prototype.applyEdit = function(edit) {
-  // if there's a master link, Link#update waits for the master to acknoledge the new edits
-  // else it pushes them to history directly, which means we can just transform against history
+EditableDocument.prototype.applyEdit = function(edit, fromLink) {
   this.update()
   
-  if(!this.masterLink) {
-    // apply to shadowCopy
-    Document.prototype.applyEdit.call(this, edit, fromLink)
-  }else{
-    // XXX TODO : Dry things up here! This is really similar to Document#applyEdit!
-    var incomingEdit = edit.clone()
-
-    if(this.masterLink.sent) edit.follow(this.masterLink.sent)
-
-    /*this.masterLink.queue.forEach(function(pendingEdit) {
-      edit.follow(pendingEdit)
-    })
-
-    this.masterLink.queue.forEach(function(pendingEdit, i) { // XXX obviously we need a queue in Link for this! Or rather, one sent and one unsent field. we can merge into unsent
-      pendingEdit.transformAgainst(incomingEdit)
-      if(0 == i && !this.masterLink.awaitingAck) pendingEdit.parent = edit.id
-
-      incomingEdit.transformAgainst(pendingEdit)
-    })
-*/ // XXX Just commenting this out for testing ourposes
-    // apply changes
-    console.log('EditableDocument: apply edit', edit)
-    try {
-      this.content = edit.changeset.apply(this.content)
-      this._setContent(this.content) // XXX Bad for retaining selection!
-    }catch(e) {
-      throw new Error('Applying edit "'+edit.id+'" failed: '+e.message)
-    }
+  // Transform against possibly missed edits that have happened in the meantime
+  // -- they all gotta be in this queue, since all edits have to be double checked with the master
+  if(this.masterLink.sent) edit.follow(this.masterLink.sent)
+  this.masterLink.queue.forEach(function(pendingEdit) {
+    edit.follow(pendingEdit)
+  })
+    
+  // apply changes
+  console.log('EditableDocument: apply edit', edit)
+  try {
+    this.content = edit.changeset.apply(this.content)
+    this._setContent(this.content) // XXX Bad for retaining selection!
+  }catch(e) {
+    throw new Error('Applying edit "'+edit.id+'" failed: '+e.message)
   }
 }

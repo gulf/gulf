@@ -7,6 +7,7 @@ function Document() {
   this.content = null
   this.history = new History
   this.links = []
+  this.slaves = []
   this.masterLink = null
 }
 
@@ -29,6 +30,12 @@ Document.prototype.createLink = function() {
   return link
 }
 
+Document.prototype.createSlaveLink = function() {
+  var link = new Link
+  this.attachSlaveLink(link)
+  return link
+}
+
 Document.prototype.createMasterLink = function() {
   var link = new Link
   this.attachLink(link)
@@ -42,6 +49,15 @@ Document.prototype.createMasterLink = function() {
 }
 
 // XXX Detach link!
+
+Document.prototype.attachSlaveLink = function(link) {
+  this.slaves.push(link)
+  this.attachLink(link)
+  
+  link.on('close', function onclose() {
+    this.slaves.splice(this.slaves.indexOf(link), 1)
+  }.bind(this))
+}
 
 // XXX Prevent people from attaching the same link multiple times
 Document.prototype.attachLink = function(link) {
@@ -66,11 +82,8 @@ Document.prototype.attachLink = function(link) {
       this.dispatchEdit(Edit.unpack(edit), link)
     else {
       // check with master
-      this.masterLink.send('edit', edit.pack())
-      this.masterLink.once('link:ack', function (id) {
-        if(id == edit.id) {
-          this.dispatchEdit(edit, link)
-        }
+      this.masterLink.sendEdit(edit, function onack() {
+        this.dispatchEdit(edit, link)
       }.bind(this))
     }
   }.bind(this))
@@ -92,13 +105,13 @@ Document.prototype.dispatchEdit = function(edit, fromLink) {
     return fromLink && fromLink.send('ack', edit.id);
 
   // Check integrity of this edit
-  if (!this.history.remembers(edit.parent)) {
+  if (!this.history.remembers(edit.parent)) {// XXX In case of an error we can't just terminate the link, what if it's using us as a master link and just passing on an edit for us to verify?
     fromLink && fromLink.emit('error', new Error('Edit "'+edit.id+'" has unknown parent "'+edit.parent+'"'))
     return
   }
 
   try {
-    this.applyEdit(edit)
+    this.applyEdit(edit, fromLink)
   }catch(e) {
     if(!fromLink) throw er
     else fromlink.emit('error', er)
@@ -107,12 +120,16 @@ Document.prototype.dispatchEdit = function(edit, fromLink) {
   this.distributeEdit(edit, fromLink)
 }
 
-Document.prototype.applyEdit = function(edit) {
-  // Transform against possibly missed edits from history that have happened in the meantime
-  this.history.getAllAfter(edit.parent)
-    .forEach(function(oldEdit) {
-      edit.follow(oldEdit)
-    })
+Document.prototype.applyEdit = function(edit, fromLink) {
+  if(this.slaves.indexOf(fromLink)) {
+    // Transform against possibly missed edits from history that have happened in the meantime
+    this.history.getAllAfter(edit.parent)
+      .forEach(function(oldEdit) {
+        edit.follow(oldEdit)
+      })
+  }else{
+    // tp2 -- tree magic!
+  }
 
   // apply changes
   console.log('Document: apply edit', edit)
@@ -130,6 +147,6 @@ Document.prototype.distributeEdit = function(edit, fromLink) {
   // forward edit
   this.links.forEach(function(link) {
     if(link === fromLink) return
-    link.send('edit', edit.pack())
+    link.sendEdit(edit)
   })
 }
