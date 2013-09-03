@@ -26,6 +26,7 @@ Document.create = function(content) {
 
 Document.prototype.createLink = function() {
   var link = new Link
+  // no peer link allowed here if we already have a master link
   this.attachLink(link)
   return link
 }

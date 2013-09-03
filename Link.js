@@ -1,5 +1,4 @@
 var Duplex = require('stream').Duplex
-  , EventEmitter = require('events').EventEmitter
 
 // uses nodeJS streams API on the public facing side
 // and events for ack, edit, etc. internally (listened on by Document; namespace: 'link:')
@@ -7,7 +6,7 @@ var Duplex = require('stream').Duplex
 
 // XX Must have the same terminology of #awaitingAck and #sent as prismIO.connection
 function Link () {
-  Duplex.call(this, {allowHalfOpen: false})
+  Duplex.call(this, {allowHalfOpen: false, objectMode: true})
 
   this.on('error', function(er) {
     console.warn('Error in link', er.stack || er)
@@ -39,13 +38,15 @@ Link.prototype.send = function(/*event, args..*/) {
  * Put an edit into the queue
  */
 Link.prototype.sendEdit = function(edit, cb) {
-  this.queue.push(edit)
+  if(this.sentEdit || this.queue.length) this.queue.push(edit)
+  else this.send('edit', (this.sentEdit = edit).pack())
+
   if(cb) this.callbacks[edit.id] = cb
 }
 
 Link.prototype._read = function() {
   if(!this.queue[0]) return // Everything other than edits gets pushed directly in Link#send()
-  if(this.sent) return
+  if(this.sentEdit) return
   
   this.sentEdit = this.queue.unshift()
   this.send('edit', this.sentEdit.pack())
