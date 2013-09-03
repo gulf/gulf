@@ -29,17 +29,32 @@ EditableDocument.prototype.update = function() {
   }.bind(this))
 }
 
-// overrides Document#applyEdit
-EditableDocument.prototype.applyEdit = function(edit, fromLink) {
+// overrides Document#sanitizeEdit
+EditableDocument.prototype.sanitizeEdit = function(edit, fromLink) {
   this.update()
   
   // Transform against possibly missed edits that have happened in the meantime
   // -- they all gotta be in this queue, since all edits have to be double checked with the master
-  if(this.masterLink.sent) edit.follow(this.masterLink.sent)
+  if(this.masterLink.sent) edit.transformAgainst(this.masterLink.sent)
+  
+  var clonedEdit = edit.clone()
+  
   this.masterLink.queue.forEach(function(pendingEdit) {
-    edit.follow(pendingEdit)
+    edit.transfromAgainst(pendingEdit)
   })
+  
+  // Transform pending edits against the incoming one
+  // so that it can be applied on our editable(!) document
+  this.masterLink.queue.forEach(function(pendingEdit, i) {
+    if(i == 0) pendingEdit.follow(clonedEdit) // adjust parentage for the first in the line
+    else pendingEdit.transformAgainst(clonedEdit) // all others have their predecessors as parents
     
+    clonedEdit.transformAgainst(pendingEdit)
+  })
+}
+
+// overrides Document#applyEdit
+EditableDocument.prototype.applyEdit = function(edit, fromLink) {
   // apply changes
   console.log('EditableDocument: apply edit', edit)
   try {

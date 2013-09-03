@@ -107,25 +107,33 @@ Document.prototype.dispatchEdit = function(edit, fromLink) {
   // Have we already got this edit?
   if(this.history.remembers(edit.id))
     return fromLink && fromLink.send('ack', edit.id);
-
-  // Check integrity of this edit
-  if (!this.history.remembers(edit.parent)) {// XXX In case of an error we can't just terminate the link, what if it's using us as a master link and just passing on an edit for us to verify?
-    fromLink && fromLink.emit('error', new Error('Edit "'+edit.id+'" has unknown parent "'+edit.parent+'"'))
-    return
-  }
-
+  
   try {
+    
+    // Check integrity of this edit
+    if (!this.history.remembers(edit.parent)) {
+      throw new Error('Edit "'+edit.id+'" has unknown parent "'+edit.parent+'"')
+    }
+    
+    this.sanitizeEdit(edit, fromLink)
     this.applyEdit(edit, fromLink)
+    
+    // add to history
+    this.history.pushEdit(edit) // XXX parent is wrong after all the transformations above
+    
   }catch(e) {
-    if(!fromLink) throw er
+    if(!fromLink) throw er // XXX In case of an error we can't just terminate the link, what if it's using us as a master link and just passing on an edit for us to verify?
     else fromlink.emit('error', er)
   }
   fromLink && fromLink.send('ack', edit.id)
   this.distributeEdit(edit, fromLink)
 }
 
-Document.prototype.applyEdit = function(edit, fromLink) {
-  if(this.slaves.indexOf(fromLink)) {
+Document.prototype.sanitizeEdit = function(edit, fromLink) {
+
+  if(this.masterLink === fromLink) {
+    // nothing. We are not allowed to apply anything without consent from master
+  }else if(this.slaves.indexOf(fromLink)) {
     // Transform against possibly missed edits from history that have happened in the meantime
     this.history.getAllAfter(edit.parent)
       .forEach(function(oldEdit) {
@@ -134,7 +142,9 @@ Document.prototype.applyEdit = function(edit, fromLink) {
   }else{
     // tp2 -- tree magic!
   }
+}
 
+Document.prototype.applyEdit = function(edit, fromLink) {
   // apply changes
   console.log('Document: apply edit', edit)
   try {
@@ -142,9 +152,6 @@ Document.prototype.applyEdit = function(edit, fromLink) {
   }catch(e) {
     throw new Error('Applying edit "'+edit.id+'" failed: '+e.message)
   }
-
-  // add to history
-  this.history.pushEdit(edit) // XXX parent is wrong after all the transformations above
 }
 
 Document.prototype.distributeEdit = function(edit, fromLink) {
