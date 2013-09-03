@@ -121,9 +121,9 @@ Document.prototype.dispatchEdit = function(edit, fromLink) {
     // add to history
     this.history.pushEdit(edit) // XXX parent is wrong after all the transformations above
     
-  }catch(e) {
+  }catch(er) {
     if(!fromLink) throw er // XXX In case of an error we can't just terminate the link, what if it's using us as a master link and just passing on an edit for us to verify?
-    else fromlink.emit('error', er)
+    else fromLink.emit('error', er)
   }
   fromLink && fromLink.send('ack', edit.id)
   this.distributeEdit(edit, fromLink)
@@ -132,15 +132,46 @@ Document.prototype.dispatchEdit = function(edit, fromLink) {
 Document.prototype.sanitizeEdit = function(edit, fromLink) {
 
   if(this.masterLink === fromLink) {
-    // nothing. We are not allowed to apply anything without consent from master
-  }else if(this.slaves.indexOf(fromLink)) {
+    // nothing. We are not allowed to apply anything without consent from master, so we don't need to transform anything here
+  }else if(~this.slaves.indexOf(fromLink)) {
     // Transform against possibly missed edits from history that have happened in the meantime
     this.history.getAllAfter(edit.parent)
       .forEach(function(oldEdit) {
         edit.follow(oldEdit)
       })
   }else{
-    // tp2 -- tree magic!
+  
+    // Prune all edits from my history that the incoming edit doesn't know about
+    var commonAnc = History.findNewestCommonAncestor(this.history.history, edit.ancestors)
+      , latest = this.history.latest()
+      
+    var editToPrune = this.history.history.indexOf(commonAnc)+1
+      , problematicRange = this.history.history.slice(editToPrune)
+      , pruned = this.history.prune(this.history.history[editToPrune], problematicRange) // What if there's still an unknown edit in there? We have to make this recursive!
+    
+    pruned.push(edit) // Now, undo all ancestors of the incoming edit
+    pruned.forEach(function(otherSitesEdit) {
+      edit.substract(otherSitesEdit)
+    })
+    // and apply our history instead
+    problematicRange.forEach(function(thisSitesEdit) {
+      edit.follow(thisSitesEdit)
+    })
+    
+    delete edit.ancestors
+      
+    /*
+    var pruned = []
+      , commonAnc
+      , latest = this.history.latest()
+      , editToPrune
+    
+    while((commonAnc = History.findNewestCommonAncestor(this.history.history, edit.ancestors)) !== latest) {// XXX Turn this.history.history into func call
+      editToPrune = this.history.history.indexOf(commonAnc)+1
+      pruned = pruned.concat(this.history.prune(this.history.history[editToPrune], this.history.history.slice(editToPrune)))
+    }*/
+    
+    
   }
 }
 
@@ -158,6 +189,8 @@ Document.prototype.distributeEdit = function(edit, fromLink) {
   // forward edit
   this.links.forEach(function(link) {
     if(link === fromLink) return
+    
+    // XXX add ancestor to edit if this is a peer link
     link.sendEdit(edit)
   })
 }
