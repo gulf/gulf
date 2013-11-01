@@ -140,38 +140,28 @@ Document.prototype.sanitizeEdit = function(edit, fromLink) {
         edit.follow(oldEdit)
       })
   }else{
-  
-    // Prune all edits from my history that the incoming edit doesn't know about
-    var commonAnc = History.findNewestCommonAncestor(this.history.history, edit.ancestors)
-      , latest = this.history.latest()
+    var reconstructedRange  = []
+      , commonAnc = this.history.history.indexOf(History.findNewestCommonAncestor(this.history.history, edit.ancestors))
+      , problematicRange = this.history.history.slice(commonAnc+1)
       
-    var editToPrune = this.history.history.indexOf(commonAnc)+1
-      , problematicRange = this.history.history.slice(editToPrune)
-      , pruned = this.history.prune(this.history.history[editToPrune], problematicRange) // What if there's still an unknown edit in there? We have to make this recursive!
+    // Prune all edits from my history that the incoming edit doesn't know about
+    if(problematicRange.length) reconstructedRange = this.history.reconstructHistory(problematicRange, edit.ancestors, commonAnc)
     
-    pruned.push(edit) // Now, undo all ancestors of the incoming edit
-    pruned.forEach(function(otherSitesEdit) {
+    // Now, undo all diverged ancestors of the incoming edit...
+    reconstructedRange.reverse().forEach(function(otherSitesEdit) {
       edit.substract(otherSitesEdit)
     })
-    // and apply our history instead
-    problematicRange.forEach(function(thisSitesEdit) {
-      edit.follow(thisSitesEdit)
+    
+    reconstructedRange.forEach(function() {
+      edit.follow(problematicRange.unshift())
     })
     
+    // ... the rest of our history ontop of the incoming edit
+    problematicRange.forEach(function(thisSitesEdit) {
+      this.history.edits[thisSitesEdit].follow(edit)
+    }.bind(this))
+    
     delete edit.ancestors
-      
-    /*
-    var pruned = []
-      , commonAnc
-      , latest = this.history.latest()
-      , editToPrune
-    
-    while((commonAnc = History.findNewestCommonAncestor(this.history.history, edit.ancestors)) !== latest) {// XXX Turn this.history.history into func call
-      editToPrune = this.history.history.indexOf(commonAnc)+1
-      pruned = pruned.concat(this.history.prune(this.history.history[editToPrune], this.history.history.slice(editToPrune)))
-    }*/
-    
-    
   }
 }
 

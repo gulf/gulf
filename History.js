@@ -39,12 +39,37 @@ History.prototype.getAllAfter = function(editId) {
 }
 
 /**
+ * targetHistory and baseHistory are arrays of edit ids
+ * we have access to all edits in baseHistory, but not in targetHistory
+ * baseHistory needs to be transformed into targetHistory
+ */
+History.prototype.reconstructHistory = function (baseHistory, targetHistory, commonAnc) {
+  var divergingPoint = commonAnc+1
+    , baseRange = baseHistory.slice(divergingPoint)
+    , targetRange = targetHistory.slice(divergingPoint)
+  
+  // Prune unknown edit from base
+  var pruned = this.pruneFrom(baseRange[0], baseRange)
+  baseRange.unshift()
+
+  // check for other differences
+  var commonAnc = History.findNewestCommonAncestor(baseRange, targetRange)
+    , divergingPoint = baseRange.indexOf(commonAnc)+1
+
+  // if there's no other difference
+  if(divergingPoint = baseRange.length) return pruned
+  
+  // there is another difference
+  return pruned.slice(0, divergingPoint).concat(this.reconstructHistory(baseRange, targetRange, divergingPoint-1))
+}
+
+/**
  * Prunes an edit from a history of edits (supplied as a list of edit ids)
  * 
  * @return a chronological list of edit ojects
  */
-History.prototype.prune = function(editId, history) {
-  if(!this.edits[editId]) throw new Error('Unknown edit')
+History.prototype.pruneFrom = function(editId, history) {
+  if(!this.edits[editId]) throw new Error('Can\'t prune unknown edit')
   
   if(!~history.indexOf(editId)) return history // Nothing to prune
   
@@ -52,6 +77,7 @@ History.prototype.prune = function(editId, history) {
   
   var prunedHistory = history.slice(history.indexOf(editId)+1)
       .map(function(otherEdit) {
+        if(!this.edits[otherEdit]) throw new Error('Can\'t reconstruct edit '+otherEdit)
         otherEdit = this.edits[otherEdit].clone()
         otherEdit.transformAgainst(pruningEdit)
         
