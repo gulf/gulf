@@ -1,6 +1,6 @@
 var Document = require('./Document')
   , Edit = require('./Edit')
-  , changesets = require('changesets').text
+  , changesets = require('changesets')
 
 // XXX Must only have a master link! Nothing else (Why?)
 // Because we need to take care of our own edits here, we don't want to mess with other docs' edits!
@@ -23,7 +23,7 @@ EditableDocument.prototype.update = function() {
   var edit = Edit.newFromChangeset(cs)
   edit.parent = this.history.latest().id
 
-  this.masterLink.sendEdit(edit/* XXX this'll queue it. In Editable we can just merge into the queue.. */ , function onack() {
+  this.masterLink.sendEdit(edit/* XXX this'll queue it. In Editable we can just merge into the queue... for performance you know! */ , function onack() {
     this.distributeEdit(edit)
     this.history.pushEdit(edit)
   }.bind(this))

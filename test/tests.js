@@ -7,8 +7,8 @@ describe('umbilical', function() {
     var docA = link.Document.create('abc')
       , docB = new link.Document
 
-    var linkA = docA.createLink()
-      , linkB = docB.createLink()
+    var linkA = docA.createSlaveLink()
+      , linkB = docB.createMasterLink()
     
     it('should adopt the current document state correctly', function(done) {
       linkA.pipe(linkB).pipe(linkA)

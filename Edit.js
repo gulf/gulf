@@ -1,11 +1,10 @@
-var changesets = require('changesets').text
+var changesets = require('changesets')
   , Changeset = changesets.Changeset
 
 function Edit() {
   this.id
   this.changeset
   this.parent
-  /*(*/this.ancestors/*)*/
 }
 
 module.exports = Edit

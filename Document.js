@@ -1,13 +1,13 @@
 var Link = require('./Link')
   , Edit = require('./Edit')
   , History = require('./History')
-  , changesets = require('changesets').text
+  , changesets = require('changesets')
 
 function Document() {
   this.content = null
   this.history = new History
-  this.links = []
   this.slaves = []
+  this.links = []
   this.masterLink = null
 }
 
@@ -22,13 +22,6 @@ Document.create = function(content) {
     )
   )
   return doc
-}
-
-Document.prototype.createLink = function() {
-  var link = new Link
-  // no peer link allowed here if we already have a master link
-  this.attachLink(link)
-  return link
 }
 
 Document.prototype.createSlaveLink = function() {
@@ -63,8 +56,9 @@ Document.prototype.attachSlaveLink = function(link) {
   }.bind(this))
 }
 
-// XXX Prevent people from attaching the same link multiple times
 Document.prototype.attachLink = function(link) {
+  if(~this.links.indexOf(link)) return;
+
   // If we don't know the document yet, request its content
   if(null === this.content) link.send('requestInit')
   this.links.push(link)
@@ -73,15 +67,14 @@ Document.prototype.attachLink = function(link) {
     link.send('init', {content: this.content, initialEdit: this.history.latest().pack()})
   }.bind(this))
 
-  // XXX Usually you wouldn't want any link to be able to reset this document!
-  // We need some way to determine whether we requested an init from that particular link!
   link.on('link:init', function(data) {
     this.content = data.content
     this.history.reset()
     this.history.pushEdit(Edit.unpack(data.initialEdit))
+    link.requestedInit = false
   }.bind(this))
 
-  link.on('link:edit', function onedit(edit) { 
+  link.on('link:edit', function onedit(edit) {
     if(!this.masterLink || link === this.masterLink)
       this.dispatchEdit(Edit.unpack(edit), link)
     else {
@@ -115,11 +108,7 @@ Document.prototype.dispatchEdit = function(edit, fromLink) {
       throw new Error('Edit "'+edit.id+'" has unknown parent "'+edit.parent+'"')
     }
     
-    this.sanitizeEdit(edit, fromLink)
-    this.applyEdit(edit, fromLink)
-    
-    // add to history
-    this.history.pushEdit(edit) // XXX parent is wrong after all the transformations above
+    this.applyEdit(this.sanitizeEdit(edit, fromLink), fromLink)
     
   }catch(er) {
     if(!fromLink) throw er // XXX In case of an error we can't just terminate the link, what if it's using us as a master link and just passing on an edit for us to verify?
@@ -129,39 +118,29 @@ Document.prototype.dispatchEdit = function(edit, fromLink) {
   this.distributeEdit(edit, fromLink)
 }
 
+/**
+ * Returns an edit that is to be applied
+ */
 Document.prototype.sanitizeEdit = function(edit, fromLink) {
 
   if(this.masterLink === fromLink) {
     // nothing. We are not allowed to apply anything without consent from master, so we don't need to transform anything here
-  }else if(~this.slaves.indexOf(fromLink)) {
+    return edit
+  }else
+  
+  if(~this.slaves.indexOf(fromLink)) {
+  
     // Transform against possibly missed edits from history that have happened in the meantime
     this.history.getAllAfter(edit.parent)
       .forEach(function(oldEdit) {
         edit.follow(oldEdit)
       })
-  }else{
-    var reconstructedRange  = []
-      , commonAnc = this.history.history.indexOf(History.findNewestCommonAncestor(this.history.history, edit.ancestors))
-      , problematicRange = this.history.history.slice(commonAnc+1)
       
-    // Prune all edits from my history that the incoming edit doesn't know about
-    if(problematicRange.length) reconstructedRange = this.history.reconstructHistory(problematicRange, edit.ancestors, commonAnc)
+    // add to history
+    this.history.pushEdit(edit)
     
-    // Now, undo all diverged ancestors of the incoming edit...
-    reconstructedRange.reverse().forEach(function(otherSitesEdit) {
-      edit.substract(otherSitesEdit)
-    })
+    return edit
     
-    reconstructedRange.forEach(function() {
-      edit.follow(problematicRange.unshift())
-    })
-    
-    // ... the rest of our history ontop of the incoming edit
-    problematicRange.forEach(function(thisSitesEdit) {
-      this.history.edits[thisSitesEdit].follow(edit)
-    }.bind(this))
-    
-    delete edit.ancestors
   }
 }
 
@@ -180,7 +159,6 @@ Document.prototype.distributeEdit = function(edit, fromLink) {
   this.links.forEach(function(link) {
     if(link === fromLink) return
     
-    // XXX add ancestor to edit if this is a peer link
     link.sendEdit(edit)
   })
 }

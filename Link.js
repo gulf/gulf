@@ -29,8 +29,9 @@ module.exports = Link
 /**
  * Pipeline an event
  */
-Link.prototype.send = function(/*event, args..*/) {
+Link.prototype.send = function(event/*, args..*/) {
   //console.log('->', arguments)
+  if(event == 'requestInit') this.requestedInit = true
   this.push(JSON.stringify(Array.prototype.slice.call(arguments)))
 }
 
@@ -55,6 +56,8 @@ Link.prototype._read = function() {
 Link.prototype._write = function(buf, enc, cb) {
   //console.log('<- _write:', buf.toString(enc))
   var args = JSON.parse(buf.toString(enc))
+  
+  if(args[0] == 'requestInit') this.requestedInit = false
   
   // Intercept acks for shifting the queue and calling callbacks
   if(args[0] == 'ack' && args[1] == this.sentEdit.id) {

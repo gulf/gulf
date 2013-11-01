@@ -39,31 +39,6 @@ History.prototype.getAllAfter = function(editId) {
 }
 
 /**
- * targetHistory and baseHistory are arrays of edit ids
- * we have access to all edits in baseHistory, but not in targetHistory
- * baseHistory needs to be transformed into targetHistory
- */
-History.prototype.reconstructHistory = function (baseHistory, targetHistory, commonAnc) {
-  var divergingPoint = commonAnc+1
-    , baseRange = baseHistory.slice(divergingPoint)
-    , targetRange = targetHistory.slice(divergingPoint)
-  
-  // Prune unknown edit from base
-  var pruned = this.pruneFrom(baseRange[0], baseRange)
-  baseRange.unshift()
-
-  // check for other differences
-  var commonAnc = History.findNewestCommonAncestor(baseRange, targetRange)
-    , divergingPoint = baseRange.indexOf(commonAnc)+1
-
-  // if there's no other difference
-  if(divergingPoint = baseRange.length) return pruned
-  
-  // there is another difference
-  return pruned.slice(0, divergingPoint).concat(this.reconstructHistory(baseRange, targetRange, divergingPoint-1))
-}
-
-/**
  * Prunes an edit from a history of edits (supplied as a list of edit ids)
  * 
  * @return a chronological list of edit ojects
@@ -86,31 +61,4 @@ History.prototype.pruneFrom = function(editId, history) {
       })
   
   return prunedHistory
-}
-
-/**
- * Find the newest common ancestors of the passed edit and this document
- */
-History.findNewestCommonAncestor = function(ancestors1, ancestors2) {
-  var anc1 = 0
-    , anc2 = 0
-    , commonAncestor
-  
-  if(~ancestors1.indexOf(ancestors2[0])) { // XXX Actually there's no need to call indexOf twice, it just looks more sane
-    anc1 = ancestors1.indexOf(ancestors2[0])
-  }
-  else if(~ancestors2.indexOf(ancestors1[0])) {
-    anc2 = ancestors2.indexOf(ancestors1[0])
-  }else{
-    throw new Error('Edit is of unknown descendancy')
-  }
-  
-  // find the newest common ancestor
-  while (ancestors1[anc1] == ancestors2[anc2]) {
-    commonAncestor = ancestors1[anc1]
-    anc1++
-    anc2++
-  }
-  
-  return ancestors1[anc1]
 }
