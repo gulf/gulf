@@ -1,7 +1,11 @@
-var link = require('../')
-  , expect = require('expect.js')
+try {
+  var link = require('../')
+    , expect = require('expect.js')
+}catch(e) {
+  var link = require('telepath')
+}
 
-describe('umbilical', function() {
+describe('telepath', function() {
 
   describe('Linking to new documents', function() {
     var docA = link.Document.create('abc')

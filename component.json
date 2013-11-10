@@ -1,0 +1,20 @@
+{
+  "name": "telepath",
+  "repo": "marcelklehr/telepath",
+  "description": "OT managing library",
+  "version": "0.0.0",
+  "dependencies": {
+    "marcelklehr/changesets": "*",
+    "marcelklehr/browser-stream": "*"
+  },
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": [
+    "index.js",
+    "Document.js",
+    "EditableDocument.js",
+    "Edit.js",
+    "Link.js",
+    "History.js"
+  ]
+}
