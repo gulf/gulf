@@ -1,7 +1,7 @@
-# Telepath
+# Telepath [![Build Status](https://travis-ci.org/marcelklehr/telepath.png)](https://travis-ci.org/marcelklehr/telepath)
 Link documents and they'll stay in sync. Anywhere in the world, in node.js and the browser!
 
-This is alpha software, thus it's by no means stable, nor is the API finalized. Yet, it already works.
+*This is alpha software, thus it's by no means stable, nor is the API finalized. Yet, it already works!*
 
 ## Show me!
 
