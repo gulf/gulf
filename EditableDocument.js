@@ -12,26 +12,26 @@ module.exports = EditableDocument
 
 EditableDocument.prototype = Object.create(Document.prototype, { constructor: { value: EditableDocument }})
 
-EditableDocument.prototype.update = function() {
-  if(null === this.content) return
+EditableDocument.prototype.attachSlaveLink = function() {
+  throw new Error('You can\'t attach a slave to an editable document!')
+}
 
-  var cs = changesets.constructChangeset(this.content, this._getContent())// XXX Abstract this -- only allows for text!
-  if(!cs.length) return
-  
-  this.content = this._getContent()
+EditableDocument.prototype.update = function(cs) {
+  if(null === this.content) throw new Error('Document has not been initialized')
 
   var edit = Edit.newFromChangeset(cs)
   edit.parent = this.history.latest().id
 
-  this.masterLink.sendEdit(edit/* XXX this'll queue it. In Editable we can just merge into the queue... for performance you know! */ , function onack() {
-    this.distributeEdit(edit)
+  this.masterLink.sendEdit(edit/* XXX this'll queue it. but in Editable we can just merge into the queue... for performance you know! */ , function onack() {
+    this.applyEdit(edit)
+    //this.distributeEdit(edit) // Unnecessary
     this.history.pushEdit(edit)
   }.bind(this))
 }
 
 // overrides Document#sanitizeEdit
 EditableDocument.prototype.sanitizeEdit = function(edit, fromLink) {
-  this.update()
+  // XXX: REQUEST OUTSTANDING LOCAL EDITS HERE!
   
   // Transform against possibly missed edits that have happened in the meantime
   // -- they all gotta be in this queue, since all edits have to be double checked with the master
@@ -58,8 +58,8 @@ EditableDocument.prototype.applyEdit = function(edit, fromLink) {
   // apply changes
   console.log('EditableDocument: apply edit', edit)
   try {
-    this.content = edit.changeset.apply(this.content)
-    this._setContent(this.content) // XXX Bad for retaining selection!
+    this.content = edit.apply(this.content)
+    this._change(edit.changeset, this.content) // XXX Bad for retaining selection!
   }catch(e) {
     throw new Error('Applying edit "'+edit.id+'" failed: '+e.message)
   }

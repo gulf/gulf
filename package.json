@@ -1,6 +1,6 @@
 {
-  "name": "umbilical",
-  "version": "0.0.0",
+  "name": "telepath",
+  "version": "0.1.0",
   "description": "Sync anything!",
   "repository": {
     "type": "git",
@@ -23,10 +23,7 @@
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {
-    "changesets": "*"
-  , "emit-stream": "*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "mocha": "*"
   , "expect.js": "*"

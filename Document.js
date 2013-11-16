@@ -1,7 +1,6 @@
 var Link = require('./Link')
   , Edit = require('./Edit')
   , History = require('./History')
-  , changesets = require('changesets')
 
 function Document() {
   this.content = null
@@ -16,11 +15,7 @@ module.exports = Document
 Document.create = function(content) {
   var doc = new Document
   doc.content = content
-  doc.history.pushEdit(
-    Edit.newFromChangeset(
-      changesets.constructChangeset('', content)// This dictates that we use text only... :/ -- we could add some dummy first edit...
-    )
-  )
+  doc.history.pushEdit(Edit.newInitial())
   return doc
 }
 
@@ -148,7 +143,7 @@ Document.prototype.applyEdit = function(edit, fromLink) {
   // apply changes
   console.log('Document: apply edit', edit)
   try {
-    this.content = edit.changeset.apply(this.content)
+    this.content = edit.apply(this.content)
   }catch(e) {
     throw new Error('Applying edit "'+edit.id+'" failed: '+e.message)
   }

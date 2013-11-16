@@ -2,9 +2,9 @@
   "name": "telepath",
   "repo": "marcelklehr/telepath",
   "description": "OT managing library",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "dependencies": {
-    "marcelklehr/changesets": "*",
+    "share/ottypes": "*",
     "marcelklehr/browser-stream": "*"
   },
   "license": "MIT",

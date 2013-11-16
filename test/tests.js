@@ -1,15 +1,16 @@
 try {
-  var link = require('../')
+  var telepath = require('../')
     , expect = require('expect.js')
 }catch(e) {
-  var link = require('telepath')
+  var telepath = require('telepath')
 }
+telepath.ot = require('ottypes').text
 
 describe('telepath', function() {
 
   describe('Linking to new documents', function() {
-    var docA = link.Document.create('abc')
-      , docB = new link.Document
+    var docA = telepath.Document.create('abc')
+      , docB = new telepath.Document
 
     var linkA = docA.createSlaveLink()
       , linkB = docB.createMasterLink()
@@ -25,12 +26,13 @@ describe('telepath', function() {
   })
   
   describe('Linking to editable documents', function() {
-    var docA = link.Document.create('abc')
-      , docB = new link.EditableDocument
+    var initialContent = 'abc'
+      , cs = [3, 'd']
+    var docA = telepath.Document.create(initialContent)
+      , docB = new telepath.EditableDocument
 
     var content = ''
-    docB._getContent = function() { return content }
-    docB._setContent = function(c) { content = c }
+    docB._change = function(cs, newcontent) { content = newcontent }
 
     var linkA = docA.createSlaveLink()
       , linkB = docB.createMasterLink()
@@ -53,13 +55,13 @@ describe('telepath', function() {
     })
     
     it('should replicate insertions across links', function(done) {
-      content = 'abcd'
-      docB.update()
+      docB.update(cs)
 
       setTimeout(function() {
+        console.log('DocB:', docB.content, 'DocA', docA.content)
         expect(docA.content).to.eql(docB.content)
         done()
-      }, 0)
+      }, 10)
     })
   })
 })

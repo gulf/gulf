@@ -39,10 +39,10 @@ Link.prototype.send = function(event/*, args..*/) {
  * Put an edit into the queue
  */
 Link.prototype.sendEdit = function(edit, cb) {
+  if(cb) this.callbacks[edit.id] = cb
+
   if(this.sentEdit || this.queue.length) this.queue.push(edit)
   else this.send('edit', (this.sentEdit = edit).pack())
-
-  if(cb) this.callbacks[edit.id] = cb
 }
 
 Link.prototype._read = function() {

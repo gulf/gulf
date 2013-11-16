@@ -1,7 +1,7 @@
-var changesets = require('changesets')
-  , Changeset = changesets.Changeset
+var t
 
 function Edit() {
+  t = require('./index')
   this.id
   this.changeset
   this.parent
@@ -13,8 +13,14 @@ Edit.unpack = function(json) {
   json = JSON.parse(json)
   var edit = new Edit
   edit.id = json.id
-  edit.changeset = Changeset.unpack(json.cs)
+  if(json.cs) edit.changeset = t.ot.deserialize? t.ot.deserialize(json.cs) : JSON.parse(json.cs)
   edit.parent = json.parent
+  return edit
+}
+
+Edit.newInitial = function() {
+  var edit = new Edit
+  edit.id = randString()
   return edit
 }
 
@@ -25,18 +31,28 @@ Edit.newFromChangeset = function(cs) {
   return edit
 }
 
+Edit.prototype.apply = function(snaptshot) {
+  if(!this.changeset) return snapshot
+  return t.ot.apply(snaptshot, this.changeset)
+}
+
 Edit.prototype.follow = function(edit) {
-  if(this.parent != edit.parent) throw new Error('Trying to follow an edit that\'s not a direct sibling.')
+  if(this.parent != edit.parent) throw new Error('Trying to follow an edit that\'s is not a direct sibling.')
   this.transformAgainst(edit)
   this.parent = edit.id
 }
 
-Edit.prototype.transformAgainst = function(edit) {
-  this.changeset = this.changeset.transformAgainst(edit.changeset)
+Edit.prototype.transformAgainst = function(edit, left) {
+  this.changeset = t.ot.transform(this.changeset, edit.changeset, /*side:*/left?'left':'right')
 }
 
 Edit.prototype.pack = function() {
-  return JSON.stringify({parent: this.parent, id: this.id, cs: this.changeset.pack()})
+  var o = {
+    parent: this.parent
+  , id: this.id
+  }
+  if(this.changeset) o.cs = t.ot.serialize? t.ot.serialize(this.changeset) : JSON.stringify(this.changeset)
+  return JSON.stringify(o)
 }
 
 Edit.prototype.clone = function() {
@@ -49,8 +65,8 @@ Edit.prototype.clone = function() {
 
 function randString() {
   var str = ''
-  while (str.length < 9) {
-    str += (Math.random()*100).toString(36)
+  while (str.length < 10) {
+    str += (Math.random()*1E7<<0x5).toString(36)
   }
   return str
 }
