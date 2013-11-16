@@ -1,6 +1,5 @@
 var Document = require('./Document')
   , Edit = require('./Edit')
-  , changesets = require('changesets')
 
 // XXX Must only have a master link! Nothing else (Why?)
 // Because we need to take care of our own edits here, we don't want to mess with other docs' edits!

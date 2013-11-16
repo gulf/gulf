@@ -1,8 +1,8 @@
 try {
+  var telepath = require('telepath')
+}catch(e) {
   var telepath = require('../')
     , expect = require('expect.js')
-}catch(e) {
-  var telepath = require('telepath')
 }
 telepath.ot = require('ottypes').text
 

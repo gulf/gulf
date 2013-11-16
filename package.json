@@ -27,6 +27,7 @@
   "devDependencies": {
     "mocha": "*"
   , "expect.js": "*"
+  , "ottypes": "*"
   },
   "author": "Marcel Klehr <mklehr@gmx.net>",
   "license": [{"type": "MIT", "url": "http://opensource.org/licenses/MIT"}],
