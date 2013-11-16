@@ -4,43 +4,78 @@ Link documents and they'll stay in sync. Anywhere in the world, in node.js and t
 *This is alpha software, thus it's by no means stable, nor is the API finalized. Yet, it already works!*
 
 ## Show me!
+<table>
+<tr>
+<td>
 
 ```js
+/*
+ * ALICE
+ */
 var telepath = require('telepath')
+  , net = require('net')
 
+var doc = telepath.Document.create('abc')
 
+doc.content // 'abc'
 
-// We have two documents
+net.createServer(function(socket) {
+  // create a slave link 
+  var link = doc.createSlaveLink()
 
-var a = telepath.Document.create('abc')
-  , b = new telepath.Document
-
-a.content // 'abc' - Amy sees 'abc'
-b.content // null - Bob has no content yet.
-
-
-
-// Now, let's link the two documents!
-
-var linkA = a.createSlaveLink()
-  , linkB = b.createMasterLink() // bob's document is gonna be a slave of amy's.
-
-linkA.pipe(linkB).pipe(linkA)
-
-
-
-// Now, wait a few miliseconds...
-
-a.content // 'abc'
-b.content // 'abc'
+  // connect the client as a slave
+  // of alice's document
+  socket.pipe(link).pipe(socket)
+})
+// listen for connections
+.listen(7453)
 ```
 
-Wow.
+</td>
+<td>
 
-## How does it work?
-Telepath uses operational transformation, which is all about making edits fit. Node.js streams make sure linking documents is a pure joy.
+```js
+/*
+ * BOB
+ */
+var telepath = require('telepath')
+  , net = require('net')
 
-Why can't it do peer-to-peer linking? Well, Peer-to-peer is a pain-in-the-ass scenario with operational transformation and not at all performant, but that's not my final word on tp2, I'm just too swamped to implement that properly, so I thought, let's leave that for later.
+var doc = new telepath.Document
+
+doc.content // null
+
+net.connect(7453, function(socket) {
+  // create a link to a master for bob
+  var link = a.createMasterLink()
+
+  // connect bob's document with Alice's
+  socket.pipe(link).pipe(socket)
+})
+
+
+// -
+```
+
+</td>
+</tr>
+<tr>
+<td>
+</td>
+<td>
+
+```js
+  // now let's wait a bit...
+  setTimeout(function() {
+    doc.content // 'abc'
+  }, 100)
+```
+
+</td>
+</tr>
+</table>
+
+This is not a one-time thing. There are also `EditableDocument`s that stay in sync while you alter them.
 
 ## Usage
 
@@ -64,9 +99,9 @@ Every document can have many slave links, but only one master link. *Two* links 
 linkA.pipe(linkB).pipe(linkA)
 ```
 
-The use case here is that the two docs are usually not in the same environment, usually not even on the same machine. In order to connect them anyway just establish a connection between them (e.g. a TCP connection, or a websocket using shoe) and pipe your links to the raw stream on both ends.
+Usually, the two docs are usually not in the same environment, usually not even on the same machine. In order to connect them anyway just establish a connection between them (e.g. a TCP connection, or a websocket using shoe) and pipe your links to the raw stream on both ends (as seen above).
 
-## Operational transformation
+## Operational transform
 Telepath expects you to provide an OT library that adhere's to [shareJs's OT type spec](https://github.com/share/ottypes#spec).
 
 For example, you could use shareJS's OT engine for plain text.
@@ -74,6 +109,11 @@ For example, you could use shareJS's OT engine for plain text.
 var telepath = require('telepath')
   , telepath.ot = require('ottypes').text
 ```
+
+## How does it work?
+Telepath uses operational transformation, which is all about making edits fit. Node.js streams make sure linking documents is a pure joy.
+
+Why can't it do peer-to-peer linking? Well, Peer-to-peer is a pain-in-the-ass scenario with operational transformation and not at all performant, but that's not my final word on tp2, I'm just too swamped to implement that properly, so I thought, let's leave that for later.
 
 ## Tests?
 ```
