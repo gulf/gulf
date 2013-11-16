@@ -4,9 +4,6 @@ Link documents and they'll stay in sync. Anywhere in the world, in node.js and t
 *This is alpha software, thus it's by no means stable, nor is the API finalized. Yet, it already works!*
 
 ## Show me!
-<table>
-<tr>
-<td>
 
 ```js
 /*
@@ -31,9 +28,6 @@ net.createServer(function(socket) {
 .listen(7453)
 ```
 
-</td>
-<td>
-
 ```js
 /*
  * BOB
@@ -53,16 +47,7 @@ net.connect(7453, function(socket) {
   socket.pipe(link).pipe(socket)
 })
 
-
-// -
 ```
-
-</td>
-</tr>
-<tr>
-<td>
-</td>
-<td>
 
 ```js
   // now let's wait a bit...
@@ -70,10 +55,6 @@ net.connect(7453, function(socket) {
     doc.content // 'abc'
   }, 100)
 ```
-
-</td>
-</tr>
-</table>
 
 This is not a one-time thing. There are also `EditableDocument`s that stay in sync while you alter them.
 
