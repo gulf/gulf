@@ -1,39 +1,43 @@
-var t
-
-function Edit() {
-  t = require('./index')
+function Edit(ottype) {
   this.id
   this.changeset
   this.parent
+  this.ottype = ottype
+  if(!ottype) throw new Error('Edit: No ottype specified')
 }
 
 module.exports = Edit
 
-Edit.unpack = function(json) {
+Edit.unpack = function(json, ottype) {
   json = JSON.parse(json)
-  var edit = new Edit
+
+  var edit = new Edit(ottype)
   edit.id = json.id
-  if(json.cs) edit.changeset = t.ot.deserialize? t.ot.deserialize(json.cs) : JSON.parse(json.cs)
+  if(json.cs) {
+    edit.changeset = ottype.deserialize?
+                          ottype.deserialize(json.cs)
+                        : JSON.parse(json.cs)
+  }
   edit.parent = json.parent
   return edit
 }
 
-Edit.newInitial = function() {
-  var edit = new Edit
+Edit.newInitial = function(ottype) {
+  var edit = new Edit(ottype)
   edit.id = randString()
   return edit
 }
 
-Edit.newFromChangeset = function(cs) {
-  var edit = new Edit
+Edit.newFromChangeset = function(cs, ottype) {
+  var edit = new Edit(ottype)
   edit.id = randString()
   edit.changeset = cs
   return edit
 }
 
-Edit.prototype.apply = function(snaptshot) {
+Edit.prototype.apply = function(snapshot) {
   if(!this.changeset) return snapshot
-  return t.ot.apply(snaptshot, this.changeset)
+  return this.ottype.apply(snapshot, this.changeset)
 }
 
 Edit.prototype.follow = function(edit) {
@@ -43,7 +47,7 @@ Edit.prototype.follow = function(edit) {
 }
 
 Edit.prototype.transformAgainst = function(edit, left) {
-  this.changeset = t.ot.transform(this.changeset, edit.changeset, /*side:*/left?'left':'right')
+  this.changeset = this.ottype.transform(this.changeset, edit.changeset, /*side:*/left?'left':'right')
 }
 
 Edit.prototype.pack = function() {
@@ -51,12 +55,16 @@ Edit.prototype.pack = function() {
     parent: this.parent
   , id: this.id
   }
-  if(this.changeset) o.cs = t.ot.serialize? t.ot.serialize(this.changeset) : JSON.stringify(this.changeset)
+  if(this.changeset) {
+    o.cs = this.ottype.serialize?
+              this.ottype.serialize(this.changeset)
+            : JSON.stringify(this.changeset)
+  }
   return JSON.stringify(o)
 }
 
 Edit.prototype.clone = function() {
-  var edit = new Edit
+  var edit = new Edit(this.ottype)
   edit.id = this.id
   edit.parent = this.parent
   edit.changeset = this.changeset

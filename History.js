@@ -40,25 +40,25 @@ History.prototype.getAllAfter = function(editId) {
 
 /**
  * Prunes an edit from a history of edits (supplied as a list of edit ids)
- * 
+ *
  * @return a chronological list of edit ojects
  */
 History.prototype.pruneFrom = function(editId, history) {
   if(!this.edits[editId]) throw new Error('Can\'t prune unknown edit')
-  
+
   if(!~history.indexOf(editId)) return history // Nothing to prune
-  
+
   var pruningEdit = this.edits[editId].clone().invert()
-  
+
   var prunedHistory = history.slice(history.indexOf(editId)+1)
       .map(function(otherEdit) {
         if(!this.edits[otherEdit]) throw new Error('Can\'t reconstruct edit '+otherEdit)
         otherEdit = this.edits[otherEdit].clone()
         otherEdit.transformAgainst(pruningEdit)
-        
+
         pruningEdit.transformAgainst(otherEdit)
         return otherEdit
       })
-  
+
   return prunedHistory
 }

@@ -2,7 +2,8 @@ var Link = require('./Link')
   , Edit = require('./Edit')
   , History = require('./History')
 
-function Document() {
+function Document(ottype) {
+  this.ottype = ottype
   this.content = null
   this.history = new History
   this.slaves = []
@@ -15,10 +16,10 @@ module.exports = Document
 /**
  * Creates a new document
  */
-Document.create = function(content) {
-  var doc = new Document
+Document.create = function(ottype, content) {
+  var doc = new Document(ottype)
   doc.content = content
-  doc.history.pushEdit(Edit.newInitial())
+  doc.history.pushEdit(Edit.newInitial(ottype))
   return doc
 }
 
@@ -33,6 +34,7 @@ Document.prototype.slaveLink = function() {
 
 /**
  * Creates a new Link and attaches it as master
+ * (You will want to listen to the link's 'close' event)
  */
 Document.prototype.masterLink = function() {
   var link = new Link
@@ -73,31 +75,61 @@ Document.prototype.attachLink = function(link) {
   if(null === this.content) link.send('requestInit')
   this.links.push(link)
 
+  // Other end requests init? can do.
   link.on('link:requestInit', function() {
     link.send('init', {content: this.content, initialEdit: this.history.latest().pack()})
   }.bind(this))
 
+  // Other side sends init.
   link.on('link:init', function(data) {
-    this.content = data.content
-    this.history.reset()
-    this.history.pushEdit(Edit.unpack(data.initialEdit))
-    link.requestedInit = false
+    this.receiveInit(data, link)
   }.bind(this))
 
+  // Other side sends edit.
   link.on('link:edit', function onedit(edit) {
-    if(!this.masterLink || link === this.masterLink)
-      this.dispatchEdit(Edit.unpack(edit), link)
-    else {
-      // check with master
-      this.masterLink.sendEdit(edit, function onack() {
-        this.dispatchEdit(edit, link)
-      }.bind(this))
-    }
+    this.receiveEdit(edit, link)
   }.bind(this))
 
   link.on('close', function onclose() {
     this.links.splice(this.links.indexOf(link), 1)
   }.bind(this))
+}
+
+/**
+ * Receive init
+ *
+ * @param data {Object} Example: {content: "", initialEdit: <Edit..>}
+ */
+Document.prototype.receiveInit = function(data, fromLink) {
+  // I'm master? Don't go bossing me around!
+  if(!this.masterLink || fromLink == this.masterLink) return
+
+  var content = data.content
+    , initialEdit = data.initialEdit
+
+  initialEdit = Edit.unpack(initialEdit, this.ottype)
+
+  this.content = content
+  this.history.reset()
+  this.history.pushEdit(initialEdit)
+}
+
+/**
+ * Receive an edit
+ *
+ * @param edit <Edit>
+ * @paramfromLink <Link>
+ */
+Document.prototype.receiveEdit = function(edit, fromLink) {
+  if (!this.masterLink || fromLink === this.masterLink) {
+    // Edit comes from master, or even better: we are master, yea baby!
+    this.dispatchEdit(Edit.unpack(edit, this.ottype), fromLink)
+  }else {
+    // check with master first
+    this.masterLink.sendEdit(edit, function onack() {
+      this.dispatchEdit(edit, fromLink)
+    }.bind(this))
+  }
 }
 
 /**
@@ -107,9 +139,11 @@ Document.prototype.attachLink = function(link) {
  * @param fromLink <Link> (optional>
  */
 Document.prototype.dispatchEdit = function(edit, fromLink) {
-  // Have we already got this edit?
-  if(this.history.remembers(edit.id))
-    return fromLink && fromLink.send('ack', edit.id);
+  if (this.history.remembers(edit.id)) {
+    // We've got this edit already.
+    if(fromLink) fromLink.send('ack', edit.id)
+    return
+  }
 
   try {
 
@@ -121,30 +155,33 @@ Document.prototype.dispatchEdit = function(edit, fromLink) {
     this.applyEdit(this.sanitizeEdit(edit, fromLink), fromLink)
 
   }catch(er) {
-    if(!fromLink) throw er // XXX In case of an error we can't just terminate the link, what if it's using us as a master link and just passing on an edit for us to verify?
-    else fromLink.emit('error', er)
+    if(!fromLink) throw er // XXX: In case of an error we can't just terminate the link,
+                           //      what if it's using us as a master link and just passing on an
+                           //      edit for us to verify?
+
+    fromLink.emit('error', er) // ^^
   }
-  fromLink && fromLink.send('ack', edit.id)
+
+  if(fromLink) fromLink.send('ack', edit.id)
   this.distributeEdit(edit, fromLink)
 }
 
 /**
- * Returns an edit that is to be applied
+ * Returns an edit that is able to be applied
  */
 Document.prototype.sanitizeEdit = function(edit, fromLink) {
 
   if(this.masterLink === fromLink) {
-    // nothing. We are not allowed to apply anything without consent from master, so we don't need to transform anything here
+    // We are not allowed to apply anything without consent from master anyway,
+    // so we don't need to transform anything coming from master.
     return edit
-  }else
+  }else {
 
-  if(~this.slaves.indexOf(fromLink)) {
-
-    // Transform against possibly missed edits from history that have happened in the meantime
-    this.history.getAllAfter(edit.parent)
-      .forEach(function(oldEdit) {
-        edit.follow(oldEdit)
-      })
+    // Transform against missed edits from history that have happened in the meantime
+    var missed = this.history.getAllAfter(edit.parent)
+    missed.forEach(function(oldEdit) {
+      edit.follow(oldEdit)
+    })
 
     // add to history
     this.history.pushEdit(edit)
