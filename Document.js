@@ -8,7 +8,9 @@ function Document(ottype) {
   this.history = new History
   this.slaves = []
   this.links = []
-  this.masterLink = null
+  this.master = null
+
+  if(!this.ottype) throw new Error('Document: No ottype specified')
 }
 
 module.exports = Document
@@ -49,10 +51,10 @@ Document.prototype.masterLink = function() {
  */
 Document.prototype.attachMasterLink = function(link) {
   this.attachLink(link)
-  this.masterLink = link
+  this.master = link
 
   link.on('close', function() {
-    this.masterLink = null
+    this.master = null
   }.bind(this))
 }
 
@@ -102,7 +104,7 @@ Document.prototype.attachLink = function(link) {
  */
 Document.prototype.receiveInit = function(data, fromLink) {
   // I'm master? Don't go bossing me around!
-  if(!this.masterLink || fromLink == this.masterLink) return
+  if(!this.master || fromLink == this.master) return
 
   var content = data.content
     , initialEdit = data.initialEdit
@@ -121,12 +123,12 @@ Document.prototype.receiveInit = function(data, fromLink) {
  * @paramfromLink <Link>
  */
 Document.prototype.receiveEdit = function(edit, fromLink) {
-  if (!this.masterLink || fromLink === this.masterLink) {
+  if (!this.master || fromLink === this.master) {
     // Edit comes from master, or even better: we are master, yea baby!
     this.dispatchEdit(Edit.unpack(edit, this.ottype), fromLink)
   }else {
     // check with master first
-    this.masterLink.sendEdit(edit, function onack() {
+    this.master.sendEdit(edit, function onack() {
       this.dispatchEdit(edit, fromLink)
     }.bind(this))
   }
@@ -152,7 +154,7 @@ Document.prototype.dispatchEdit = function(edit, fromLink) {
       throw new Error('Edit "'+edit.id+'" has unknown parent "'+edit.parent+'"')
     }
 
-    this.applyEdit(this.sanitizeEdit(edit, fromLink), fromLink)
+    this.applyEdit(this.sanitizeEdit(edit, fromLink))
 
   }catch(er) {
     if(!fromLink) throw er // XXX: In case of an error we can't just terminate the link,
@@ -171,11 +173,12 @@ Document.prototype.dispatchEdit = function(edit, fromLink) {
  */
 Document.prototype.sanitizeEdit = function(edit, fromLink) {
 
-  if(this.masterLink === fromLink) {
+  if(this.master === fromLink) {
     // We are not allowed to apply anything without consent from master anyway,
     // so we don't need to transform anything coming from master.
     return edit
   }else {
+    // We are master!
 
     // Transform against missed edits from history that have happened in the meantime
     var missed = this.history.getAllAfter(edit.parent)
@@ -191,7 +194,7 @@ Document.prototype.sanitizeEdit = function(edit, fromLink) {
   }
 }
 
-Document.prototype.applyEdit = function(edit, fromLink) {
+Document.prototype.applyEdit = function(edit) {
   // apply changes
   console.log('Document: apply edit', edit)
   try {
