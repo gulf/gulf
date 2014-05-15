@@ -50,8 +50,8 @@ Document.prototype.masterLink = function() {
  * Attaches a link as master
  */
 Document.prototype.attachMasterLink = function(link) {
-  this.attachLink(link)
   this.master = link
+  this.attachLink(link)
 
   link.on('close', function() {
     this.master = null
@@ -73,8 +73,6 @@ Document.prototype.attachSlaveLink = function(link) {
 Document.prototype.attachLink = function(link) {
   if(~this.links.indexOf(link)) return;
 
-  // If we don't know the document yet, request its content
-  if(null === this.content) link.send('requestInit')
   this.links.push(link)
 
   // Other end requests init? can do.
@@ -95,6 +93,9 @@ Document.prototype.attachLink = function(link) {
   link.on('close', function onclose() {
     this.links.splice(this.links.indexOf(link), 1)
   }.bind(this))
+
+  // If we don't know the document yet, request its content
+  if(null === this.content) link.send('requestInit')
 }
 
 /**
@@ -104,7 +105,7 @@ Document.prototype.attachLink = function(link) {
  */
 Document.prototype.receiveInit = function(data, fromLink) {
   // I'm master? Don't go bossing me around!
-  if(!this.master || fromLink == this.master) return
+  if(!this.master || fromLink !== this.master) return
 
   var content = data.content
     , initialEdit = data.initialEdit

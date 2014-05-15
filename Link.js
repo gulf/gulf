@@ -33,8 +33,11 @@ module.exports = Link
  * Please, Don't send edits with this method! Use .sendEdit() to queue it, like everyone else.
  */
 Link.prototype.send = function(event/*, args..*/) {
-  //console.log('->', arguments)
-  this.push(JSON.stringify(Array.prototype.slice.call(arguments)))
+  var data = JSON.stringify(Array.prototype.slice.call(arguments))
+  console.log('->', data)
+  //console.trace()
+
+  this.push(data)
 }
 
 /*
@@ -65,7 +68,7 @@ Link.prototype._read = function() {
 }
 
 Link.prototype._write = function(buf, enc, cb) {
-  //console.log('<- _write:', buf.toString(enc))
+  console.log('<- _write:', buf.toString(enc))
   var args = JSON.parse(buf.toString(enc))
 
   // Intercept acks for shifting the queue and calling callbacks

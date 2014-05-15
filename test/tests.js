@@ -1,19 +1,22 @@
+/* global xdescribe, describe, it, xit */
+var telepath
+  , expect = require('expect.js')
+  , ottype = require('ottypes').text
+
 try {
-  var telepath = require('telepath')
+  telepath = require('telepath')
 }catch(e) {
-  var telepath = require('../')
-    , expect = require('expect.js')
+  telepath = require('../')
 }
-telepath.ot = require('ottypes').text
 
 describe('telepath', function() {
 
   describe('Linking to new documents', function() {
-    var docA = telepath.Document.create('abc')
-      , docB = new telepath.Document
+    var docA = telepath.Document.create(ottype, 'abc')
+      , docB = new telepath.Document(ottype)
 
-    var linkA = docA.createSlaveLink()
-      , linkB = docB.createMasterLink()
+    var linkA = docA.slaveLink()
+      , linkB = docB.masterLink()
 
     it('should adopt the current document state correctly', function(done) {
       linkA.pipe(linkB).pipe(linkA)
@@ -28,14 +31,17 @@ describe('telepath', function() {
   describe('Linking to editable documents', function() {
     var initialContent = 'abc'
       , cs = [3, 'd']
-    var docA = telepath.Document.create(initialContent)
-      , docB = new telepath.EditableDocument
+    var docA = telepath.Document.create(ottype, initialContent)
+      , docB = new telepath.EditableDocument(ottype)
 
     var content = ''
-    docB._change = function(cs, newcontent) { content = newcontent }
+    docB._change = function(newcontent, cs) {
+      content = newcontent
+      console.log('_change: ', newcontent)
+    }
 
-    var linkA = docA.createSlaveLink()
-      , linkB = docB.createMasterLink()
+    var linkA = docA.slaveLink()
+      , linkB = docB.masterLink()
 
     linkA.on('link:edit', console.log.bind(console, 'edit in linkA'))
     linkA.on('link:ack', console.log.bind(console, 'ack in linkA'))
@@ -50,6 +56,7 @@ describe('telepath', function() {
 
       setTimeout(function() {
         expect(docB.content).to.eql(docA.content)
+        expect(content).to.eql(docA.content)
         done()
       }, 0)
     })
@@ -59,7 +66,8 @@ describe('telepath', function() {
 
       setTimeout(function() {
         console.log('DocB:', docB.content, 'DocA', docA.content)
-        expect(docA.content).to.eql(docB.content)
+        expect(docB.content).to.eql(docA.content)
+        expect(content).to.eql(docA.content)
         done()
       }, 10)
     })
