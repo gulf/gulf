@@ -37,7 +37,7 @@ Edit.prototype.apply = function(snaptshot) {
 }
 
 Edit.prototype.follow = function(edit) {
-  if(this.parent != edit.parent) throw new Error('Trying to follow an edit that\'s is not a direct sibling.')
+  if(this.parent != edit.parent) throw new Error('Trying to follow an edit that is not a direct sibling.')
   this.transformAgainst(edit)
   this.parent = edit.id
 }

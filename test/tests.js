@@ -14,7 +14,7 @@ describe('telepath', function() {
 
     var linkA = docA.createSlaveLink()
       , linkB = docB.createMasterLink()
-    
+
     it('should adopt the current document state correctly', function(done) {
       linkA.pipe(linkB).pipe(linkA)
 
@@ -24,7 +24,7 @@ describe('telepath', function() {
       }, 0)
     })
   })
-  
+
   describe('Linking to editable documents', function() {
     var initialContent = 'abc'
       , cs = [3, 'd']
@@ -44,7 +44,7 @@ describe('telepath', function() {
 
     it('should adopt the current document state correctly', function(done) {
       linkA.pipe(linkB).pipe(linkA)
-      
+
       //linkB.pipe(process.stdout)
       //linkA.pipe(process.stdout)
 
@@ -53,7 +53,7 @@ describe('telepath', function() {
         done()
       }, 0)
     })
-    
+
     it('should replicate insertions across links', function(done) {
       docB.update(cs)
 

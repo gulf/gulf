@@ -12,6 +12,9 @@ function Document() {
 
 module.exports = Document
 
+/**
+ * Creates a new document
+ */
 Document.create = function(content) {
   var doc = new Document
   doc.content = content
@@ -19,13 +22,19 @@ Document.create = function(content) {
   return doc
 }
 
-Document.prototype.createSlaveLink = function() {
+/**
+ * Creates a new Link and attaches it as a slave
+ */
+Document.prototype.slaveLink = function() {
   var link = new Link
   this.attachSlaveLink(link)
   return link
 }
 
-Document.prototype.createMasterLink = function() {
+/**
+ * Creates a new Link and attaches it as master
+ */
+Document.prototype.masterLink = function() {
   var link = new Link
   this.attachMasterLink(link)
   return link
@@ -33,6 +42,9 @@ Document.prototype.createMasterLink = function() {
 
 // XXX Detach link!
 
+/**
+ * Attaches a link as master
+ */
 Document.prototype.attachMasterLink = function(link) {
   this.attachLink(link)
   this.masterLink = link
@@ -42,10 +54,13 @@ Document.prototype.attachMasterLink = function(link) {
   }.bind(this))
 }
 
+/**
+ * Attaches a link as a slave
+ */
 Document.prototype.attachSlaveLink = function(link) {
   this.slaves.push(link)
   this.attachLink(link)
-  
+
   link.on('close', function onclose() {
     this.slaves.splice(this.slaves.indexOf(link), 1)
   }.bind(this))
@@ -87,7 +102,7 @@ Document.prototype.attachLink = function(link) {
 
 /**
  * Dispatch a received edit
- * 
+ *
  * @param edit <Edit>
  * @param fromLink <Link> (optional>
  */
@@ -95,16 +110,16 @@ Document.prototype.dispatchEdit = function(edit, fromLink) {
   // Have we already got this edit?
   if(this.history.remembers(edit.id))
     return fromLink && fromLink.send('ack', edit.id);
-  
+
   try {
-    
+
     // Check integrity of this edit
     if (!this.history.remembers(edit.parent)) {
       throw new Error('Edit "'+edit.id+'" has unknown parent "'+edit.parent+'"')
     }
-    
+
     this.applyEdit(this.sanitizeEdit(edit, fromLink), fromLink)
-    
+
   }catch(er) {
     if(!fromLink) throw er // XXX In case of an error we can't just terminate the link, what if it's using us as a master link and just passing on an edit for us to verify?
     else fromLink.emit('error', er)
@@ -122,20 +137,20 @@ Document.prototype.sanitizeEdit = function(edit, fromLink) {
     // nothing. We are not allowed to apply anything without consent from master, so we don't need to transform anything here
     return edit
   }else
-  
+
   if(~this.slaves.indexOf(fromLink)) {
-  
+
     // Transform against possibly missed edits from history that have happened in the meantime
     this.history.getAllAfter(edit.parent)
       .forEach(function(oldEdit) {
         edit.follow(oldEdit)
       })
-      
+
     // add to history
     this.history.pushEdit(edit)
-    
+
     return edit
-    
+
   }
 }
 
@@ -153,7 +168,7 @@ Document.prototype.distributeEdit = function(edit, fromLink) {
   // forward edit
   this.links.forEach(function(link) {
     if(link === fromLink) return
-    
+
     link.sendEdit(edit)
   })
 }
