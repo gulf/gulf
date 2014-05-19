@@ -1,23 +1,20 @@
 {
   "name": "gulf",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Sync anything!",
   "repository": {
     "type": "git",
-    "url": "https://github.com/marcelklehr/vibes.git"
+    "url": "https://github.com/marcelklehr/gulf.git"
   },
   "keywords": [
     "operational transformation",
     "ot",
     "changesets",
     "diff",
-    "Forward Transformation",
-    "Backward Transformation",
-    "Inclusion Transformation",
-    "Exclusion Transformation",
-    "collaborative",
+    "collaborate",
     "undo",
-    "text"
+    "text",
+    "shareJS"
   ],
   "main": "./lib/index",
   "scripts": {
