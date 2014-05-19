@@ -1,12 +1,13 @@
 /* global xdescribe, describe, it, xit */
-var gulf
-  , expect = require('expect.js')
+var gulf, expect
   , ottype = require('ottypes').text
 
+
 try {
-  gulf = require('gulf')
-}catch(e) {
   gulf = require('../')
+  expect = require('expect.js')
+}catch(e) {
+  gulf = require('gulf')
 }
 
 describe('gulf', function() {

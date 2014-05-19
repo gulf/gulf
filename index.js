@@ -4,5 +4,4 @@ module.exports = {
 , EditableDocument: require('./EditableDocument')
 , Edit: require('./Edit')
 , History: require('./History')
-, ot: null
 }
