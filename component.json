@@ -1,10 +1,9 @@
 {
-  "name": "telepath",
-  "repo": "marcelklehr/telepath",
+  "name": "gulf",
+  "repo": "marcelklehr/gulf",
   "description": "OT managing library",
   "version": "0.1.0",
   "dependencies": {
-    "share/ottypes": "*",
     "marcelklehr/browser-stream": "*"
   },
   "license": "MIT",

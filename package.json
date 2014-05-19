@@ -1,10 +1,10 @@
 {
-  "name": "telepath",
+  "name": "gulf",
   "version": "0.1.0",
   "description": "Sync anything!",
   "repository": {
     "type": "git",
-    "url": "https://github.com/marcelklehr/changesets.git"
+    "url": "https://github.com/marcelklehr/vibes.git"
   },
   "keywords": [
     "operational transformation",

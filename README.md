@@ -1,7 +1,5 @@
-# Telepath [![Build Status](https://travis-ci.org/marcelklehr/telepath.png)](https://travis-ci.org/marcelklehr/telepath)
-Link documents and they'll stay in sync. Anywhere in the world, in node.js and the browser!
-
-*This is alpha software, thus it's by no means stable, nor is the API finalized. Yet, it already works!*
+# Gulf [![Build Status](https://travis-ci.org/marcelklehr/gulf.png)](https://travis-ci.org/marcelklehr/gulf)
+Connect your documents to the gulf stream and they'll stay in sync. Anywhere in the world, in node.js and the browser!
 
 ## Show me!
 
@@ -9,19 +7,19 @@ Link documents and they'll stay in sync. Anywhere in the world, in node.js and t
 /*
  * ALICE
  */
-var telepath = require('telepath')
+var gulf = require('gulf')
   , net = require('net')
   , textOT = require('ottypes').text
 
-var doc = telepath.Document.create(textOT, 'abc')
+var doc = gulf.Document.create(textOT, 'abc')
 
 doc.content // 'abc'
 
 net.createServer(function(socket) {
-  // create a slave link for each socket
+  // create a slave link for each socket that connects
   var slave = doc.slaveLink()
 
-  // connect the client as a slave
+  // add the new client as a slave
   // of alice's document
   socket.pipe(slave).pipe(socket)
 })
@@ -33,11 +31,11 @@ net.createServer(function(socket) {
 /*
  * BOB
  */
-var telepath = require('telepath')
+var gulf = require('gulf')
   , net = require('net')
   , textOT = require('ottypes').text
 
-var doc = new telepath.Document(textOT)
+var doc = new gulf.Document(textOT)
 
 doc.content // null
 
@@ -86,13 +84,13 @@ Now that we've connected all documents, every time Alice or Bob make a change th
 Since we're in a globalized world we can't expect all documents to be on the same machine. That's why a Link is a simple DuplexStream. You may pipe it to a tcp socket or a websocket or some other stream. Of course that means that you need two instances of Link -- one for each document you want to connect.
 
 ```js
-masterDoc = new telepath.Document(ot)
+masterDoc = new gulf.Document(ot)
 
 socket.pipe(masterDoc.slaveLink()).pipe(socket)
 ```
 
 ```js
-slaveDoc = new telepath.Document(ot)
+slaveDoc = new gulf.Document(ot)
 
 socket.pipe(slaveDoc.masterLink()).pipe(socket)
 ```
@@ -102,7 +100,7 @@ We will call two links connected through a pipe, a "pipeline". If a pipeline is 
 EditableDocuments leave some methods for you to implement:
 
 ```js
-var document = new telepath.EditableDocument(ottype)
+var document = new gulf.EditableDocument(ottype)
 
 document._change = function(newcontent, cs) {
   if(cs) {
@@ -124,16 +122,16 @@ Everytime the document is changed by an incoming edit `_change` is called with t
 Before an incoming edit is processed `_collectChanges` is called allowing you to save possible changes before the new edit is applied. Just like you'd git commit before git pulling anything -- we don't want things would get hairy.
 
 ## Operational transform *bling*
-Telepath expects you to provide an OT library that adhere's to [shareJs's OT type spec](https://github.com/share/ottypes#spec).
+Gulf expects you to provide an OT library that adhere's to [shareJs's OT type spec](https://github.com/share/ottypes#spec).
 
 You can use [shareJS's built in ottypes](https://github.com/share/ottypes) or  [other](https://github.com/marcelklehr/changesets) [libraries](https://github.com/marcelklehr/dom-ot).
 
 For example, you could use shareJS's OT engine for plain text.
 ```js
-var telepath = require('telepath')
+var gulf = require('gulf')
   , textOT = require('ottypes').text
 
-var document = new telepath.Document(textOT)
+var document = new gulf.Document(textOT)
 ```
 
 ## How does it work?

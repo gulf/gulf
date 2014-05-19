@@ -1,19 +1,19 @@
 /* global xdescribe, describe, it, xit */
-var telepath
+var gulf
   , expect = require('expect.js')
   , ottype = require('ottypes').text
 
 try {
-  telepath = require('telepath')
+  gulf = require('gulf')
 }catch(e) {
-  telepath = require('../')
+  gulf = require('../')
 }
 
-describe('telepath', function() {
+describe('gulf', function() {
 
   describe('Linking to new documents', function() {
-    var docA = telepath.Document.create(ottype, 'abc')
-      , docB = new telepath.Document(ottype)
+    var docA = gulf.Document.create(ottype, 'abc')
+      , docB = new gulf.Document(ottype)
 
     var linkA = docA.slaveLink()
       , linkB = docB.masterLink()
@@ -31,8 +31,8 @@ describe('telepath', function() {
   describe('Linking to editable documents', function() {
     var initialContent = 'abc'
       , cs = [3, 'd']
-    var docA = telepath.Document.create(ottype, initialContent)
-      , docB = new telepath.EditableDocument(ottype)
+    var docA = gulf.Document.create(ottype, initialContent)
+      , docB = new gulf.EditableDocument(ottype)
 
     var content = ''
     docB._change = function(newcontent, cs) {
