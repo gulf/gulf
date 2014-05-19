@@ -1,7 +1,7 @@
 module.exports = {
-  Link: require('./Link')
-, Document: require('./Document')
-, EditableDocument: require('./EditableDocument')
-, Edit: require('./Edit')
-, History: require('./History')
+  Link: require('./lib/Link')
+, Document: require('./lib/Document')
+, EditableDocument: require('./lib/EditableDocument')
+, Edit: require('./lib/Edit')
+, History: require('./lib/History')
 }

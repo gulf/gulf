@@ -10,10 +10,10 @@
   "main": "index.js",
   "scripts": [
     "index.js",
-    "Document.js",
-    "EditableDocument.js",
-    "Edit.js",
-    "Link.js",
-    "History.js"
+    "lib/Document.js",
+    "lib/EditableDocument.js",
+    "lib/Edit.js",
+    "lib/Link.js",
+    "lib/History.js"
   ]
 }
