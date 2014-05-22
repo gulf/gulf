@@ -1,5 +1,5 @@
 # Gulf [![Build Status](https://travis-ci.org/marcelklehr/gulf.png)](https://travis-ci.org/marcelklehr/gulf)
-The Gulf stream will sync your documents. Anywhere in the world, in node.js and the browser!
+The Gulf stream will sync your documents in real-time. Anywhere in the world, in node.js and the browser!
 
 
 ### How?
