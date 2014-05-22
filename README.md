@@ -1,16 +1,17 @@
 # Gulf [![Build Status](https://travis-ci.org/marcelklehr/gulf.png)](https://travis-ci.org/marcelklehr/gulf)
 The Gulf stream will sync your documents. Anywhere in the world, in node.js and the browser!
 
+
+### How?
+You choose an [OT](https://en.wikipedia.org/wiki/Operational_transformation) [type](https://github.com/marcelklehr/gulf#operational-transform-bling) algorithm, gulf will sync your documents.
+
 ## Show me!
 
 ```js
 /*
  * Alice
  */
-var gulf = require('gulf')
-  , net = require('net')
-  , textOT = require('ottypes').text
-
+var textOT = require('ottypes').text
 
 // Create a new master document
 
@@ -35,10 +36,7 @@ net.createServer(function(socket) {
 /*
  * Bob
  */
-var gulf = require('gulf')
-  , net = require('net')
-  , textOT = require('ottypes').text
-
+var textOT = require('ottypes').text
 
 // Create a new slave document (empty by default)
 
