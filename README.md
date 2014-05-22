@@ -14,10 +14,7 @@ You choose an [OT](https://en.wikipedia.org/wiki/Operational_transformation) [ty
 var textOT = require('ottypes').text
 
 // Create a new master document
-
 var doc = gulf.Document.create(textOT, 'abc')
-
-doc.content // 'abc'
 
 // Set up a server
 net.createServer(function(socket) {
@@ -39,10 +36,7 @@ net.createServer(function(socket) {
 var textOT = require('ottypes').text
 
 // Create a new slave document (empty by default)
-
 var doc = new gulf.Document(textOT)
-
-doc.content // null -- it's really empty.
 
 // Connect to alice's server
 net.connect(7453, function(socket) {
