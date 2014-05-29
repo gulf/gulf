@@ -4,10 +4,10 @@ var gulf, expect
 
 
 try {
+  gulf = require('gulf')
+}catch(e) {
   gulf = require('../')
   expect = require('expect.js')
-}catch(e) {
-  gulf = require('gulf')
 }
 
 describe('gulf', function() {

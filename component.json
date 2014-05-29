@@ -5,6 +5,10 @@
   "version": "0.2.0",
   "dependencies": {
     "marcelklehr/browser-stream": "*"
+  , "timoxley/next-tick": "*"
+  },
+  "devDependencies": {
+    "share/ottypes": "*"
   },
   "license": "MIT",
   "main": "index.js",
