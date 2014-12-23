@@ -64,7 +64,8 @@ describe('gulf', function() {
     })
 
     it('should replicate insertions across links', function(done) {
-      docB.update(cs)
+      content = 'abcd' // We mimick some edit->cs algo here
+      docB.update(cs) // *bling*
 
       setTimeout(function() {
         console.log('DocB:', docB.content, 'DocA', docA.content)
