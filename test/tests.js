@@ -6,6 +6,7 @@ var gulf, expect
 try {
   gulf = require('gulf')
 }catch(e) {
+  console.log(e)
   gulf = require('../')
   expect = require('expect.js')
 }

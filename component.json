@@ -8,7 +8,7 @@
   , "timoxley/next-tick": "*"
   },
   "devDependencies": {
-    "share/ottypes": "*"
+    "marcelklehr/ottypes": "*"
   },
   "license": "MIT",
   "main": "index.js",
