@@ -32,7 +32,6 @@ describe('gulf', function() {
 
   describe('Linking to editable documents', function() {
     var initialContent = 'abc'
-      , cs = [3, 'd']
     var docA = gulf.Document.create(ottype, initialContent)
       , docB = new gulf.EditableDocument(ottype)
 
@@ -45,10 +44,10 @@ describe('gulf', function() {
     var linkA = docA.slaveLink()
       , linkB = docB.masterLink()
 
-    linkA.on('link:edit', console.log.bind(console, 'edit in linkA'))
+    /*linkA.on('link:edit', console.log.bind(console, 'edit in linkA'))
     linkA.on('link:ack', console.log.bind(console, 'ack in linkA'))
     linkB.on('link:edit', console.log.bind(console, 'edit in linkB'))
-    linkB.on('link:ack', console.log.bind(console, 'ack in linkB'))
+    linkB.on('link:ack', console.log.bind(console, 'ack in linkB'))*/
 
     it('should adopt the current document state correctly', function(done) {
       linkA.pipe(linkB).pipe(linkA)
@@ -65,14 +64,27 @@ describe('gulf', function() {
 
     it('should replicate insertions across links', function(done) {
       content = 'abcd' // We mimick some edit->cs algo here
-      docB.update(cs) // *bling*
+      docB.update([3, 'd']) // *bling*
 
       setTimeout(function() {
         console.log('DocB:', docB.content, 'DocA', docA.content)
         expect(docB.content).to.eql(docA.content)
         expect(content).to.eql(docA.content)
         done()
-      }, 10)
+      }, 100)
+    })
+
+    it('should replicate multiple insertions across links', function(done) {
+      content = 'abcdef' // We mimick some edit->cs algo here
+      docB.update([4, 'e']) // *bling*
+      docB.update([5, 'f']) // *bling*
+
+      setTimeout(function() {
+        console.log('DocB:', docB.content, 'DocA', docA.content)
+        expect(docB.content).to.eql(docA.content)
+        expect(content).to.eql(docA.content)
+        done()
+      }, 100)
     })
   })
 })
