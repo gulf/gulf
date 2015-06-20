@@ -16,7 +16,7 @@ You choose an [OT](https://en.wikipedia.org/wiki/Operational_transformation) [ty
 var textOT = require('ottypes').text
 
 // Create a new master document
-var doc = gulf.Document.create(textOT, 'abc')
+var doc = gulf.Document.create(new gulf.MemoryAdapter, textOT, 'abc')
 
 // Set up a server
 net.createServer(function(socket) {
@@ -38,7 +38,7 @@ net.createServer(function(socket) {
 var textOT = require('ottypes').text
 
 // Create a new slave document (empty by default)
-var doc = new gulf.Document(textOT)
+var doc = new gulf.Document(new gulf.MemoryAdapter, textOT)
 
 // Connect to alice's server
 net.connect(7453, function(socket) {
@@ -80,13 +80,13 @@ Now that we've connected all documents, every time Alice or Bob make a change th
 Since we're in a globalized world we can't expect all documents to be on the same machine. That's why a Link is a simple DuplexStream. You may pipe it to a tcp socket or a websocket or some other stream. Of course that means that you need two instances of a Link -- one for each side of the connection.
 
 ```js
-masterDoc = new gulf.Document(ot)
+masterDoc = new gulf.Document(adapter, ot)
 
 socket.pipe(masterDoc.slaveLink()).pipe(socket)
 ```
 
 ```js
-slaveDoc = new gulf.Document(ot)
+slaveDoc = new gulf.Document(adapter, ot)
 
 socket.pipe(slaveDoc.masterLink()).pipe(socket)
 ```
@@ -96,7 +96,7 @@ We will call two links connected through a pipe, a "pipeline". If a pipeline is 
 EditableDocuments leave some methods for you to implement:
 
 ```js
-var document = new gulf.EditableDocument(ottype)
+var document = new gulf.EditableDocument(adapter, ottype)
 
 document._change = function(newcontent, cs) {
   if(cs) {
@@ -120,15 +120,21 @@ Before an incoming edit is processed `_collectChanges` is called allowing you to
 ## Operational transform *bling*
 Gulf expects you to provide an OT library that adhere's to [shareJs's OT type spec](https://github.com/share/ottypes#spec).
 
-You can use [shareJS's built in ottypes](https://github.com/share/ottypes) or  [other](https://github.com/marcelklehr/changesets) [libraries](https://github.com/marcelklehr/dom-ot).
+You can use [shareJS's built in ottypes](https://github.com/share/ottypes) or  [some other](https://github.com/marcelklehr/changesets) [libraries](https://github.com/marcelklehr/dom-ot).
 
 For example, you could use shareJS's OT engine for plain text.
 ```js
 var gulf = require('gulf')
   , textOT = require('ottypes').text
 
-var document = new gulf.Document(textOT)
+var document = new gulf.Document(new gulf.MemoryAdapter, textOT)
 ```
+
+## Storage adapters
+Gulf allows you to store your data anywhere you like, if you can provide it with a storage adapter. It comes with an in-memory adapter, ready for you to test your app quickly, but when the time comes to get ready for production you will want to change to a persistent storage backend like mongoDB or redis.
+
+Currently implemented adapters are:
+ * [In-memory adapter](https://github.com/marcelklehr/gulf/blob/master/lib/MemoryAdapter.js)
 
 ## FAQ
 
@@ -144,7 +150,6 @@ Why? Well, Peer-to-peer is a pain-in-the-ass scenario with operational transform
 ```
 
 ## Todo
-
 * Check whether objects might get ripped apart in raw streams
 * Catch misusage (i.e. attaching the same link twice to the same or different docs, employing a pipeline as master on both ends, piping a link twice -- is that even possible?)
 
