@@ -4,4 +4,5 @@ module.exports = {
 , EditableDocument: require('./lib/EditableDocument')
 , Edit: require('./lib/Edit')
 , History: require('./lib/History')
+, MemoryAdapter: require('./lib/MemoryAdapter')
 }

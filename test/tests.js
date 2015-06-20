@@ -14,11 +14,18 @@ try {
 describe('gulf', function() {
 
   describe('Linking to new documents', function() {
-    var docA = gulf.Document.create(ottype, 'abc')
-      , docB = new gulf.Document(ottype)
-
-    var linkA = docA.slaveLink()
-      , linkB = docB.masterLink()
+    var docA, docB
+    var linkA, linkB
+    
+    before(function(cb) {
+      gulf.Document.create(new gulf.MemoryAdapter, ottype, 'abc', function(er, doc) {
+        docA = doc
+        docB = new gulf.Document(new gulf.MemoryAdapter, ottype)
+        linkA = docA.slaveLink()
+        linkB = docB.masterLink()
+        cb()
+      })
+    })
 
     it('should adopt the current document state correctly', function(done) {
       linkA.pipe(linkB).pipe(linkA)
@@ -32,17 +39,27 @@ describe('gulf', function() {
 
   describe('Linking to editable documents', function() {
     var initialContent = 'abc'
-    var docA = gulf.Document.create(ottype, initialContent)
-      , docB = new gulf.EditableDocument(ottype)
+    var docA, docB
+    var linkA, linkB
+    var content
 
-    var content = ''
-    docB._change = function(newcontent, cs) {
-      content = newcontent
-      console.log('_change: ', newcontent)
-    }
+    before(function(cb) {
+      gulf.Document.create(new gulf.MemoryAdapter, ottype, initialContent, function(er, doc) {
+        docA = doc
+        docB = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
 
-    var linkA = docA.slaveLink()
-      , linkB = docB.masterLink()
+        content = ''
+        docB._change = function(newcontent, cs) {
+          content = newcontent
+          console.log('_change: ', newcontent)
+        }
+
+        linkA = docA.slaveLink()
+        linkB = docB.masterLink()
+        cb()
+      })
+    })
+    
 
     /*linkA.on('link:edit', console.log.bind(console, 'edit in linkA'))
     linkA.on('link:ack', console.log.bind(console, 'ack in linkA'))
@@ -71,7 +88,7 @@ describe('gulf', function() {
         expect(docB.content).to.eql(docA.content)
         expect(content).to.eql(docA.content)
         done()
-      }, 100)
+      }, 0)
     })
 
     it('should replicate multiple insertions across links', function(done) {
@@ -85,7 +102,7 @@ describe('gulf', function() {
         expect(docB.content).to.eql(docA.content)
         expect(content).to.eql(docA.content)
         done()
-      }, 100)
+      }, 20)
     })
   })
 })
