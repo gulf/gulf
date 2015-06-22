@@ -7,7 +7,7 @@
     "url": "https://github.com/marcelklehr/gulf.git"
   },
   "dependencies": {
-    "setImmediate": "1.x"
+    "setimmediate": "1.x"
   },
   "keywords": [
     "operational transformation",
