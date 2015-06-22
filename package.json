@@ -23,7 +23,6 @@
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {},
   "devDependencies": {
     "mocha": "*"
   , "expect.js": "*"
