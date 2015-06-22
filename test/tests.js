@@ -105,4 +105,72 @@ describe('gulf', function() {
       }, 20)
     })
   })
+  
+  describe('Linking two editable documents via a master', function() {
+    var initialContent = 'abc'
+    var masterDoc, docA, docB
+    var linkA, linkB
+    var contentA, contentB
+
+    before(function(cb) {
+      gulf.Document.create(new gulf.MemoryAdapter, ottype, initialContent, function(er, doc) {
+        masterDoc = doc
+
+        docA = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
+        contentA = ''
+        docA._collectChanges = function() {}
+        docA._change = function(newcontent, cs) {
+          contentA = newcontent
+          console.log('_change(A): ', newcontent, cs)
+        }
+
+        docB = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
+        contentB = ''
+        docB._collectChanges = function() {}
+        docB._change = function(newcontent, cs) {
+          contentB = newcontent
+          console.log('_change(B): ', newcontent, cs)
+        }
+
+        linkA = docA.masterLink()
+        linkB = docB.masterLink()
+        cb()
+      })
+    })
+    
+    it('should correctly propagate the initial contents', function(cb) {
+      linkA.pipe(masterDoc.slaveLink()).pipe(linkA)
+      linkB.pipe(masterDoc.slaveLink()).pipe(linkB)
+      
+      setTimeout(function() {
+        expect(contentA).to.eql(initialContent)
+        expect(contentB).to.eql(initialContent)
+        cb()
+      }, 20)
+    })
+    
+    it('should correctly propagate the first edit from one end to the other end', function(cb) {
+      contentA = 'abcd'
+      docA.update([3, 'd'])
+      
+      setTimeout(function() {
+        expect(docA.content).to.eql(contentA)
+        expect(contentB).to.eql(contentB)
+        cb()
+      }, 20)
+    })
+    
+    it('should correctly propagate edits from one end to the other end', function(cb) {
+      contentA = 'abcd1'
+      docA.update([4, '1'])
+      
+      contentB = 'abcd2'
+      docB.update([4, '2'])
+      
+      setTimeout(function() {
+        expect(contentB).to.eql(contentA)
+        cb()
+      }, 150)
+    })
+  })
 })

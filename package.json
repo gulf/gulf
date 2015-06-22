@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "setimmediate": "1.x"
+  , "queue": "3.x"
   },
   "keywords": [
     "operational transformation",
