@@ -104,6 +104,28 @@ describe('gulf', function() {
         done()
       }, 20)
     })
+    
+    it('should re-init on error', function(done) {
+      docB.update([10, 'e']) // an obviously corrupt edit
+      
+      setTimeout(function() {
+        console.log('DocB:', docB.content, 'DocA', docA.content)
+        expect(docB.content).to.equal(docA.content)
+        done()
+      }, 100)
+    })
+    
+    it('should propagate edits correctly after re-init', function(done) {
+      content = 'abcdefgh'
+      docB.update([7, 'h']) // an correct edit
+      
+      setTimeout(function() {
+        console.log('DocB:', docB.content, 'DocA', docA.content)
+        expect(docB.content).to.equal(docA.content)
+        expect(docA.content).to.equal(content)
+        done()
+      }, 20)
+    })
   })
   
   describe('Linking two editable documents via a master', function() {
