@@ -144,7 +144,7 @@ Currently implemented adapters are:
 
 ## FAQ
 
-How does it work? Telepath uses operational transformation, which is all about making edits fit. Node.js streams make sure linking documents is a pure joy. Everything else is in teh codez.
+How does it work? Gulf uses operational transformation, which is all about making edits fit. Node.js streams make sure linking documents is a pure joy. Everything else is in teh codez.
 
 Does it support peer-to-peer linking? No.
 
@@ -154,11 +154,6 @@ Why? Well, Peer-to-peer is a pain-in-the-ass scenario with operational transform
 ```
 > mocha
 ```
-
-## Todo
-* per-document edit queue
-* Check whether objects might get ripped apart in raw streams
-* Catch misusage (i.e. attaching the same link twice to the same or different docs, employing a pipeline as master on both ends, piping a link twice -- is that even possible?)
 
 ## License
 (c) 2013-2014 by Marcel Klehr
