@@ -30,6 +30,6 @@
   , "ottypes": "*"
   },
   "author": "Marcel Klehr <mklehr@gmx.net>",
-  "license": [{"type": "MIT", "url": "http://opensource.org/licenses/MIT"}],
+  "license": [{"type": "GPL", "url": "http://opensource.org/licenses/GPL-3.0"}],
   "readmeFilename": "README.md"
 }

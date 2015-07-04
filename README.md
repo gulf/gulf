@@ -158,5 +158,6 @@ Why? Well, Peer-to-peer is a pain-in-the-ass scenario with operational transform
 ```
 
 ## License
-(c) 2013-2014 by Marcel Klehr
-MIT License
+(c) 2013-2015 by Marcel Klehr
+
+GNU General Public License
