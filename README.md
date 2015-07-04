@@ -130,6 +130,12 @@ var gulf = require('gulf')
 var document = new gulf.Document(new gulf.MemoryAdapter, textOT)
 ```
 
+## Editor wrappers
+Since adding gulf syncing to an editor is a repetitive task and ard to get right (what with selection retention, generating diffs, etc.) there are wrappers, of course:
+
+ * [contenteditable](https//github.com/marcelklehr/gulf-contenteditable)
+ * [textarea/textinput](https//github.com/marcelklehr/gulf-textarea)
+
 ## Storage adapters
 Gulf allows you to store your data anywhere you like, if you can provide it with a storage adapter. It comes with an in-memory adapter, ready for you to test your app quickly, but when the time comes to get ready for production you will want to change to a persistent storage backend like mongoDB or redis.
 
