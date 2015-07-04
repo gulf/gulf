@@ -16,19 +16,21 @@ You choose an [OT](https://en.wikipedia.org/wiki/Operational_transformation) [ty
 var textOT = require('ottypes').text
 
 // Create a new master document
-var doc = gulf.Document.create(new gulf.MemoryAdapter, textOT, 'abc')
+gulf.Document.create(new gulf.MemoryAdapter, textOT, 'abc', function(er, doc) {
+  if(er) throw er
 
-// Set up a server
-net.createServer(function(socket) {
-  // ... and create a slave link for each socket that connects
-  var slave = doc.slaveLink()
+  // Set up a server
+  net.createServer(function(socket) {
+    // ... and create a slave link for each socket that connects
+    var slave = doc.slaveLink()
 
-  // now, add the new client as a slave
-  // of alice's document
-  socket.pipe(slave).pipe(socket)
+    // now, add the new client as a slave
+    // of alice's document
+    socket.pipe(slave).pipe(socket)
+  })
+  // listen for connections
+  .listen(7453)
 })
-// listen for connections
-.listen(7453)
 ```
 
 ```js
