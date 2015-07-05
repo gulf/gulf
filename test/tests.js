@@ -85,8 +85,8 @@ describe('gulf', function() {
 
       setTimeout(function() {
         console.log('DocB:', docB.content, 'DocA', docA.content)
-        expect(docB.content).to.eql(docA.content)
-        expect(content).to.eql(docA.content)
+        expect(docB.content).to.eql(content)
+        expect(docA.content).to.eql(content)
         done()
       }, 0)
     })
@@ -99,8 +99,8 @@ describe('gulf', function() {
 
       setTimeout(function() {
         console.log('DocB:', docB.content, 'DocA', docA.content)
-        expect(docB.content).to.eql(docA.content)
-        expect(content).to.eql(docA.content)
+        expect(docB.content).to.eql(content)
+        expect(docA.content).to.eql(content)
         done()
       }, 20)
     })
@@ -192,7 +192,7 @@ describe('gulf', function() {
       setTimeout(function() {
         expect(contentB).to.eql(contentA)
         cb()
-      }, 150)
+      }, 200)
     })
   })
 })
