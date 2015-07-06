@@ -143,6 +143,7 @@ Gulf allows you to store your data anywhere you like, if you can provide it with
 
 Currently implemented adapters are:
  * [In-memory adapter](https://github.com/marcelklehr/gulf/blob/master/lib/MemoryAdapter.js)
+ * [mongoDB adapter](https://github.com/marcelklehr/gulf-mongodb)
 
 ## FAQ
 
