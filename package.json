@@ -1,7 +1,7 @@
 {
   "name": "gulf",
-  "version": "0.4.6",
-  "description": "Sync anything!",
+  "version": "0.4.7",
+  "description": "transport-agnostic operational transformation control layer",
   "repository": {
     "type": "git",
     "url": "https://github.com/marcelklehr/gulf.git"
