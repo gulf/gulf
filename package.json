@@ -1,14 +1,14 @@
 {
   "name": "gulf",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "description": "transport-agnostic operational transformation control layer",
   "repository": {
     "type": "git",
     "url": "https://github.com/marcelklehr/gulf.git"
   },
   "dependencies": {
-    "setimmediate": "1.x"
-  , "queue": "3.x"
+    "setimmediate": "1.x",
+    "queue": "3.x"
   },
   "keywords": [
     "operational transformation",
@@ -25,11 +25,16 @@
     "test": "mocha"
   },
   "devDependencies": {
-    "mocha": "*"
-  , "expect.js": "*"
-  , "ottypes": "*"
+    "mocha": "*",
+    "expect.js": "*",
+    "ottypes": "*"
   },
   "author": "Marcel Klehr <mklehr@gmx.net>",
-  "license": [{"type": "GPL", "url": "http://opensource.org/licenses/GPL-3.0"}],
+  "license": [
+    {
+      "type": "GPL",
+      "url": "http://opensource.org/licenses/GPL-3.0"
+    }
+  ],
   "readmeFilename": "README.md"
 }
