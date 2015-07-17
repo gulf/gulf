@@ -1,6 +1,6 @@
 {
   "name": "gulf",
-  "version": "0.4.10",
+  "version": "0.4.11",
   "description": "transport-agnostic operational transformation control layer",
   "repository": {
     "type": "git",
