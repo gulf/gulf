@@ -177,17 +177,26 @@ describe('gulf', function() {
       
       setTimeout(function() {
         expect(docA.content).to.eql(contentA)
-        expect(contentB).to.eql(contentB)
+        expect(docB.content).to.eql(contentA)
+        expect(contentB).to.eql(contentA)
         cb()
       }, 20)
     })
     
     it('should correctly propagate edits from one end to the other end', function(cb) {
+      linkA.unpipe()
+      linkB.unpipe()
+      masterDoc.links[0].unpipe()
+      masterDoc.links[1].unpipe()
+
       contentA = 'abcd1'
       docA.update([4, '1'])
       
       contentB = 'abcd2'
       docB.update([4, '2'])
+      
+      linkA.pipe(masterDoc.slaveLink()).pipe(linkA)
+      linkB.pipe(masterDoc.slaveLink()).pipe(linkB)
       
       setTimeout(function() {
         expect(contentB).to.eql(contentA)
