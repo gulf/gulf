@@ -16,7 +16,7 @@ describe('gulf', function() {
   describe('Linking to new documents', function() {
     var docA, docB
     var linkA, linkB
-    
+
     before(function(cb) {
       gulf.Document.create(new gulf.MemoryAdapter, ottype, 'abc', function(er, doc) {
         docA = doc
@@ -59,7 +59,7 @@ describe('gulf', function() {
         cb()
       })
     })
-    
+
 
     /*linkA.on('link:edit', console.log.bind(console, 'edit in linkA'))
     linkA.on('link:ack', console.log.bind(console, 'ack in linkA'))
@@ -104,21 +104,21 @@ describe('gulf', function() {
         done()
       }, 20)
     })
-    
+
     it('should re-init on error', function(done) {
       docB.update([10, 'e']) // an obviously corrupt edit
-      
+
       setTimeout(function() {
         console.log('DocB:', docB.content, 'DocA', docA.content)
         expect(docB.content).to.equal(docA.content)
         done()
       }, 100)
     })
-    
+
     it('should propagate edits correctly after re-init', function(done) {
       content = 'abcdefgh'
       docB.update([7, 'h']) // an correct edit
-      
+
       setTimeout(function() {
         console.log('DocB:', docB.content, 'DocA', docA.content)
         expect(docB.content).to.equal(docA.content)
@@ -127,7 +127,7 @@ describe('gulf', function() {
       }, 20)
     })
   })
-  
+
   describe('Linking two editable documents via a master', function() {
     var initialContent = 'abc'
     var masterDoc, docA, docB
@@ -159,22 +159,22 @@ describe('gulf', function() {
         cb()
       })
     })
-    
+
     it('should correctly propagate the initial contents', function(cb) {
       linkA.pipe(masterDoc.slaveLink()).pipe(linkA)
       linkB.pipe(masterDoc.slaveLink()).pipe(linkB)
-      
+
       setTimeout(function() {
         expect(contentA).to.eql(initialContent)
         expect(contentB).to.eql(initialContent)
         cb()
       }, 20)
     })
-    
+
     it('should correctly propagate the first edit from one end to the other end', function(cb) {
       contentA = 'abcd'
       docA.update([3, 'd'])
-      
+
       setTimeout(function() {
         expect(docA.content).to.eql(contentA)
         expect(docB.content).to.eql(contentA)
@@ -182,7 +182,7 @@ describe('gulf', function() {
         cb()
       }, 20)
     })
-    
+
     it('should correctly propagate edits from one end to the other end', function(cb) {
       linkA.unpipe()
       linkB.unpipe()
@@ -191,17 +191,60 @@ describe('gulf', function() {
 
       contentA = 'abcd1'
       docA.update([4, '1'])
-      
+
       contentB = 'abcd2'
       docB.update([4, '2'])
-      
+
       linkA.pipe(masterDoc.slaveLink()).pipe(linkA)
       linkB.pipe(masterDoc.slaveLink()).pipe(linkB)
-      
+
       setTimeout(function() {
         expect(contentB).to.eql(contentA)
         cb()
       }, 200)
+    })
+  })
+
+  describe('Linking to protected documents', function() {
+    var docA, docB
+    var linkA, linkB
+
+    beforeEach(function(cb) {
+      gulf.Document.create(new gulf.MemoryAdapter, ottype, 'abc', function(er, doc) {
+        docA = doc
+        docB = new gulf.Document(new gulf.MemoryAdapter, ottype)
+        linkA = docA.slaveLink({
+          authorizeRead: function(msg, credentials, cb) {
+            if(credentials == 'rightCredentials') return cb(null, true)
+            else return cb(null, false)
+          }
+        , authorizeWrite: function(msg, credentials, cb) {
+            if(credentials == 'rightCredentials') return cb(null, true)
+            else return cb(null, false)
+          }
+        })
+        cb()
+      })
+    })
+
+    it('should adopt the current document state correctly', function(done) {
+      linkB = docB.masterLink({credentials: 'rightCredentials'})
+      linkA.pipe(linkB).pipe(linkA)
+
+      setTimeout(function() {
+        expect(docA.content).to.eql(docB.content)
+        done()
+      }, 100)
+    })
+
+    it('should not adopt the current document state if athentication failed', function(done) {
+      linkB = docB.masterLink({credentials: 'wrongCredentials'})
+      linkA.pipe(linkB).pipe(linkA)
+
+      setTimeout(function() {
+        expect(docB.content).to.eql(null)
+        done()
+      }, 100)
     })
   })
 })
