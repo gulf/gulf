@@ -145,6 +145,90 @@ Currently implemented adapters are:
  * [In-memory adapter](https://github.com/marcelklehr/gulf/blob/master/lib/MemoryAdapter.js)
  * [mongoDB adapter](https://github.com/marcelklehr/gulf-mongodb)
 
+## API
+
+### Class: gulf.Document
+
+#### new gulf.Document(adapter, ottype)
+Instantiates a new, empty Document.
+
+#### gulf.Document.create(adapter, ottype, contents, cb)
+Creates a documents with pre-set contents.
+
+#### gulf.Document.load(adapter, ottype, cb)
+Loads a document from the storage. Since there's one instance of a storage adapter per document, you need to pass the information *which* document to load to the adapter.
+
+#### gulf.Document#slaveLink(opts:Object)
+Creates a link with `opts` passed to the Link constructor and attaches it as a slave link.
+
+#### gulf.Document#masterLink(opts:Object)
+Creates a link with `opts` passed to the Link constructor and attaches it as a master link.
+
+#### gulf.Document#attachMasterLink(link:Link)
+Attaches an existing link as master.
+
+#### gulf.Document#attachSlaveLink(link:Link)
+Attaches an existing link as a slave.
+
+#### gulf.Document#receiveInit(data:Object, fromLink:Link)
+Listener function that gets called when a link attached to this document receives an `init` message. `data` could look like this: `{contents: 'abc', edit: '<Edit>'}`
+
+#### gulf.Document#receiveEdit(edit:String, fromLink:Link, [callback:Function])
+A listener function that gets called when a link receives an `edit` message. Adds the edit to the queue (after checking with a possible master) and calls Document#dispatchEdit() when ready.
+
+#### gulf.Document#dispatchEdit(edit:Edit, fromLink:Link, cb:Function)
+Checks with the document's History whether we know this edit already, and if not, whether we know its parent. If so, it calls Document#sanitizeEdit(), applies the edit to this document with Document#applyEdit(), add it to this document's History, send's an `ack` message to the link the edit came from, distributes the edit to any slaves and emits an `edit` event.
+
+#### gulf.Document#sanitizeEdit(edit:Edit, fromLink:Link, cb:Function)
+Transforms the passed edit against missed edits according to this document's history and the edit's parent information.
+
+#### gulf.Document#applyEdit(edit:Edit)
+Applies an edit to the document's content.
+
+#### gulf.Document#distributeEdit(edit:Edit, [fromLink:Link])
+Sends the passed edit to all attached links, except to `fromLink`.
+
+### Class: gulf.EditableDocument
+This class extends `gulf.Document` and overrides some of its methods.Most important among those are `gulf.EditableDocument#sanitizeEdit()` which is changed to transform the incoming edit against the ones queued in the master link and transform those against the incoming one, and `glf.EditableDocument#applyEdit` which is changed to call `_change` with the changes and the resulting contents.
+
+#### gulf.EditableDocument#update(changes:mixed)
+Update an editable document with local changes provided in `changes`. This wraps the changes in an Edit and sends them to master.
+
+### Class: gulf.Edit
+
+#### new Edit(ottype)
+instantiates a new edit without parent, changes or id. Thus it's pretty useless.
+
+#### gulf.Edit.unpack(json:String, ottype) : Edit
+Deserializes an edit that was serialized using `gulf.Edit#pack()`.
+
+#### gulf.Edit.newInitial(ottype) : Edit
+Creates a new initial edit with a random id. Initial edits carry an id but no changes.
+
+#### gulf.Edit.newFromChangeset(cs:mixed, ottype) : Edit
+Creates a new edit with a random id and changes set to `cs`.
+
+#### gulf.Edit.fromSnapshot(snapshot, ottype) : Edit
+Recreates an edit from a Snapshot. A snapshot is how edits are stored in gulf. It's an object with {id, changes, parent, contents}, which should all be pretty self-explanatory.
+
+#### gulf.Edit#apply(documentContents)
+Applies this edit on a document snapshot.
+
+#### gulf.Edit#folow(edit:Edit)
+transforms this edit against the passed one and sets the other as this edit's parent. (This operation rewrites history.)
+
+#### gulf.Edit#transformAgainst(edit:Edit)
+transforms this edit against the passed one and without resetting this edit's parent.
+
+#### gulf.Edit#merge(edit:Edit) : Edit
+merges the passed edit with this one. Returns the new edit.
+
+#### gulf.Edit#pack() : String
+Serializes this edit.
+
+#### gulf.Edit#clone() : Edit
+Returns a new edit instance that has exactly the same properties as this one.
+
 ## FAQ
 
 How does it work? Gulf uses operational transformation, which is all about making edits fit. Node.js streams make sure linking documents is a pure joy. Everything else is in teh codez.
