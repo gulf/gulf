@@ -147,21 +147,29 @@ Currently implemented adapters are:
 
 ## API
 
+### Class: gulf.Link
+
+#### new gulf.Link([opts:Object])
+Instantiates a new link, optionally with some options:
+ * `opts.credentials` The credentials to be sent to the other end for authentication purposes.
+ * `opts.authorizeWrite` A function which gets called when the other end writes a message, and has the following signature: `function (msg, receivedCredentials, cb)`
+ * `opts.authorizeRead` A function which gets called when this side of the link writes a message, and has the following signature: `function (msg, receivedCredentials, cb)`
+
 ### Class: gulf.Document
 
 #### new gulf.Document(adapter, ottype)
 Instantiates a new, empty Document.
 
 #### gulf.Document.create(adapter, ottype, contents, cb)
-Creates a documents with pre-set contents.
+Creates a documents with pre-set contents. `cb` will be called with `(er, doc)`.
 
 #### gulf.Document.load(adapter, ottype, cb)
-Loads a document from the storage. Since there's one instance of a storage adapter per document, you need to pass the information *which* document to load to the adapter.
+Loads a document from the storage. Since there's one instance of a storage adapter per document, you need to pass the information *which* document to load to the adapter instance. `cb` will be called with `(er, doc)`.
 
-#### gulf.Document#slaveLink(opts:Object)
+#### gulf.Document#slaveLink(opts:Object) : Link
 Creates a link with `opts` passed to the Link constructor and attaches it as a slave link.
 
-#### gulf.Document#masterLink(opts:Object)
+#### gulf.Document#masterLink(opts:Object) : Link
 Creates a link with `opts` passed to the Link constructor and attaches it as a master link.
 
 #### gulf.Document#attachMasterLink(link:Link)
