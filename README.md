@@ -157,6 +157,12 @@ Instantiates a new link, optionally with some options:
 
 ### Class: gulf.Document
 
+#### Event: init
+Fired when the document has received an `init` message containing a snapshot, has reset the history and set the new contents.
+
+#### Event: edit (edit:Edit)
+Fired by `gulf.Document#dispatchEdit()` when an incoming edit has been approved by the master, has been sanitized applied to the document's contents
+
 #### new gulf.Document(adapter, ottype)
 Instantiates a new, empty Document.
 
@@ -201,6 +207,9 @@ This class extends `gulf.Document` and overrides some of its methods.Most import
 
 #### gulf.EditableDocument#update(changes:mixed)
 Update an editable document with local changes provided in `changes`. This wraps the changes in an Edit and sends them to master.
+
+#### Event: update (edit:Edit)
+Fired when EditableDocument#update() has been called, but before the changes have been approved by the master. `edit` is the newly created Edit.
 
 ### Class: gulf.Edit
 
