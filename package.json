@@ -1,6 +1,6 @@
 {
   "name": "gulf",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "transport-agnostic operational transformation control layer",
   "repository": {
     "type": "git",
@@ -27,7 +27,8 @@
   "devDependencies": {
     "mocha": "*",
     "expect.js": "*",
-    "ottypes": "*"
+    "ottypes": "*",
+    "mux-dmx": "*"
   },
   "author": "Marcel Klehr <mklehr@gmx.net>",
   "license": [
