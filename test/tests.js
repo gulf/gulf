@@ -51,9 +51,15 @@ describe('gulf', function() {
         docB = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
 
         content = ''
-        docB._change = function(newcontent, cs) {
+        docB._collectChanges = function(cb) { cb() }
+        docB._setContents = function(newcontent, cb) {
           content = newcontent
-          console.log('_change: ', newcontent)
+          cb()
+        }
+        docB._change = function(cs, cb) {
+          content = ottype.apply(content, cs)
+          console.log('_change: ', content)
+          cb()
         }
 
         linkA = docA.slaveLink()
@@ -142,20 +148,28 @@ describe('gulf', function() {
 
         docA = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
         contentA = ''
-        docA._collectChanges = function() {}
-        docA._change = function(newcontent, cs) {
-          if(newcontent) contentA = newcontent
-          else contentA = ottype.apply(contentA, cs)
+        docA._collectChanges = function(cb) {cb()}
+        docA._setContents = function(newcontent, cb) {
+          contentA = newcontent
+          cb()
+        }
+        docA._change = function(cs, cb) {
+          contentA = ottype.apply(contentA, cs)
           console.log('_change(A): ', cs, contentA)
+          cb()
         }
 
         docB = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
         contentB = ''
-        docB._collectChanges = function() {}
-        docB._change = function(newcontent, cs) {
-          if(newcontent) contentB = newcontent
-          else contentB = ottype.apply(contentB, cs)
+        docB._collectChanges = function(cb) {cb()}
+        docB._setContents = function(newcontent, cb) {
+          contentB = newcontent
+          cb()
+        }
+        docB._change = function(cs, cb) {
+          contentB = ottype.apply(contentB, cs)
           console.log('_change(B): ', cs, contentB)
+          cb()
         }
 
         linkA = docA.masterLink()
@@ -269,20 +283,28 @@ describe('gulf', function() {
     before(function(cb) {
       docA = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
       contentA = ''
-      docA._collectChanges = function() {}
-      docA._change = function(newcontent, cs) {
-        if(newcontent) contentA = newcontent
-        else contentA = ottype.apply(contentA,cs )
+      docA._collectChanges = function(cb) {cb()}
+      docA._setContents = function(newcontent, cb) {
+        contentA = newcontent
+        cb()
+      }
+      docA._change = function(cs, cb) {
+        contentA = ottype.apply(contentA,cs )
         console.log('_change(A): ', cs, contentA)
+        cb()
       }
 
       docB = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
       contentB = ''
-      docB._collectChanges = function() {}
-      docB._change = function(newcontent, cs) {
-        if(newcontent) contentB = newcontent
-        else contentB = ottype.apply(contentB, cs)
+      docB._collectChanges = function(cb) {cb()}
+      docB._setContents = function(newcontent, cb) {
+        contentB = newcontent
+        cb()
+      }
+      docB._change = function(cs, cb) {
+        contentB = ottype.apply(contentB, cs)
         console.log('_change(B): ', cs, contentB)
+        cb()
       }
 
       master = require('child_process')
