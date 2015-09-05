@@ -2,6 +2,7 @@
 var gulf, expect
   , ottype = require('ottypes').text
   , MuxDmx = require('mux-dmx')
+  , through = require('through2')
 
 
 try {
@@ -212,7 +213,7 @@ describe('gulf', function() {
       setTimeout(function() {
         expect(contentB).to.eql(contentA)
         cb()
-      }, 100)
+      }, 500)
     })
   })
 
@@ -259,4 +260,100 @@ describe('gulf', function() {
     })
   })
 
+  describe('Linking documents in parallel environments', function() {
+    var initialContent = 'abc'
+    var master, docA, docB
+    var linkA, linkB
+    var contentA, contentB
+
+    before(function(cb) {
+      docA = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
+      contentA = ''
+      docA._collectChanges = function() {}
+      docA._change = function(newcontent, cs) {
+        if(newcontent) contentA = newcontent
+        else contentA = ottype.apply(contentA,cs )
+        console.log('_change(A): ', cs, contentA)
+      }
+
+      docB = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
+      contentB = ''
+      docB._collectChanges = function() {}
+      docB._change = function(newcontent, cs) {
+        if(newcontent) contentB = newcontent
+        else contentB = ottype.apply(contentB, cs)
+        console.log('_change(B): ', cs, contentB)
+      }
+
+      master = require('child_process')
+                .fork(__dirname+'/helper/parallelmaster_fork.js', [initialContent],
+                  {silent: true})
+      master.stderr.pipe(process.stdout)
+      master.on('error', function(e) {
+        throw e
+      })
+
+      linkA = docA.masterLink()
+      linkB = docB.masterLink()
+
+      setTimeout(cb, 100)
+    })
+
+    it('should propagate initial contents correctly', function(cb) {
+      var mux = MuxDmx()
+      master.stdout.pipe(mux).pipe(master.stdin)
+      linkA.pipe(mux.createDuplexStream(new Buffer('a')))
+      // add 100ms latency
+      .pipe(through(function(chunk, enc, cb) {
+        setTimeout(function() {
+          this.push(chunk)
+          cb()
+        }.bind(this), 100)
+      })).pipe(linkA)
+      linkB.pipe(mux.createDuplexStream(new Buffer('b'))).pipe(linkB)
+
+      setTimeout(function() {
+        expect(contentA).to.equal(initialContent)
+        expect(contentB).to.equal(initialContent)
+        cb()
+      }, 700)
+    })
+
+    it('should correctly propagate the first edit from one end to the other end', function(cb) {
+      contentA = 'abcd'
+      docA.update([3, 'd'])
+
+      setTimeout(function() {
+        expect(docA.content).to.eql(contentA)
+        expect(docB.content).to.eql(contentA)
+        expect(contentB).to.eql(contentA)
+        cb()
+      }, 500)
+    })
+
+    it('should correctly propagate edits from one end to the other end', function(cb) {
+      contentA = 'abcd123'
+      docA.update([4, '1']) // this edit will be sent
+
+      contentB = 'abcd45'
+      docB.update([4, '4']) // this edit will be sent
+
+      setImmediate(function() {
+        docA.update([5, '2']) // this edit will be queued
+        docA.update([6, '3'])
+        docB.update([5, '5']) // this edit will be queued
+      })
+
+      setTimeout(function() {
+        console.log(contentA, contentB)
+        expect(contentB).to.eql(contentA)
+        cb()
+      }, 500)
+    })
+
+    after(function() {
+      master.kill()
+    })
+
+  })
 })

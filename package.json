@@ -28,7 +28,8 @@
     "mocha": "*",
     "expect.js": "*",
     "ottypes": "*",
-    "mux-dmx": "*"
+    "mux-dmx": "*",
+    "through2": "*"
   },
   "author": "Marcel Klehr <mklehr@gmx.net>",
   "license": [
