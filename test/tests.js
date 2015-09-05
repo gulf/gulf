@@ -229,6 +229,34 @@ describe('gulf', function() {
         cb()
       }, 500)
     })
+
+    it('should catch up on reconnect', function(cb) {
+      // disconnect B
+      linkB.unpipe()
+      masterDoc.links[3].unpipe()
+
+      contentA = 'abcdx1324'
+      docA.update([4, 'x']) // this edit will be sent
+
+      contentB = 'abcd1324QR'
+      docB.update([8, 'Q'])
+      docB.update([9, 'R'])
+
+      setTimeout(function() {
+        // reconnect B
+        console.log('reconnect B')
+        linkB.pipe(masterDoc.slaveLink()).pipe(linkB)
+
+        // change A
+        contentA = 'abcdxy1324'
+        docA.update([5, 'y'])
+        setTimeout(function() {
+          expect(contentB).to.equal('abcdxy1324QR')
+          expect(contentB).to.equal(contentA)
+          cb()
+        }, 100)
+      }, 100)
+    })
   })
 
   describe('Linking to protected documents', function() {
