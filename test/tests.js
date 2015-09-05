@@ -1,6 +1,7 @@
 /* global xdescribe, describe, it, xit */
 var gulf, expect
   , ottype = require('ottypes').text
+  , MuxDmx = require('mux-dmx')
 
 
 try {
@@ -142,16 +143,18 @@ describe('gulf', function() {
         contentA = ''
         docA._collectChanges = function() {}
         docA._change = function(newcontent, cs) {
-          contentA = newcontent
-          console.log('_change(A): ', newcontent, cs)
+          if(newcontent) contentA = newcontent
+          else contentA = ottype.apply(contentA, cs)
+          console.log('_change(A): ', cs, contentA)
         }
 
         docB = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
         contentB = ''
         docB._collectChanges = function() {}
         docB._change = function(newcontent, cs) {
-          contentB = newcontent
-          console.log('_change(B): ', newcontent, cs)
+          if(newcontent) contentB = newcontent
+          else contentB = ottype.apply(contentB, cs)
+          console.log('_change(B): ', cs, contentB)
         }
 
         linkA = docA.masterLink()
@@ -189,19 +192,27 @@ describe('gulf', function() {
       masterDoc.links[0].unpipe()
       masterDoc.links[1].unpipe()
 
-      contentA = 'abcd1'
-      docA.update([4, '1'])
+      contentA = 'abcd12'
+      docA.update([4, '1']) // this edit will be sent
+      setImmediate(function() {
+        docA.update([5, '2']) // this edit will be queued
+      })
 
-      contentB = 'abcd2'
-      docB.update([4, '2'])
+      contentB = 'abcd34'
+      docB.update([4, '3']) // this edit will be sent
+      setImmediate(function() {
+        docB.update([5, '4']) // this edit will be queued
+      })
 
-      linkA.pipe(masterDoc.slaveLink()).pipe(linkA)
-      linkB.pipe(masterDoc.slaveLink()).pipe(linkB)
+      setImmediate(function() {
+        linkA.pipe(masterDoc.slaveLink()).pipe(linkA)
+        linkB.pipe(masterDoc.slaveLink()).pipe(linkB)
+      })
 
       setTimeout(function() {
         expect(contentB).to.eql(contentA)
         cb()
-      }, 200)
+      }, 100)
     })
   })
 
@@ -247,4 +258,5 @@ describe('gulf', function() {
       }, 100)
     })
   })
+
 })
