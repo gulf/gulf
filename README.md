@@ -100,24 +100,28 @@ EditableDocuments leave some methods for you to implement:
 ```js
 var document = new gulf.EditableDocument(adapter, ottype)
 
-document._change = function(newcontent, cs) {
-  if(cs) {
-    applyChanges(myTextarea, cs)
-  }
-  else {
-    setContent(myTextarea, newcontent)
-  }
+document._change = function(cs, cb) {
+  applyChanges(myTextarea, cs)
+  cb()
 }
 
-document._collectChanges = function() {
+document._setContents = function(newcontent, cb) {
+  setContent(myTextarea, newcontent)
+  cb()
+}
+
+document._collectChanges = functioncb() {
   if(!myTextarea.wasChanged()) return
   document.update(computeChanges()) // *bling*
+  cb()
 }
 ```
 
-Everytime the document is changed by an incoming edit `_change` is called with the new contents and the changeset (upon initializing the document it may get called only with the new content).
+Before anything can happen, the document is initialized wwith `_setContents`.
 
-Before an incoming edit is processed `_collectChanges` is called allowing you to save possible changes before the new edit is applied. Just like you'd git commit before git pulling anything -- we don't want things would get hairy.
+Everytime the document is changed by an incoming edit `_change` is called with the changeset.
+
+Before an incoming edit is processed `_collectChanges` is called, allowing you to save possible changes before the new edit is applied. Just like you'd git commit before git pulling anything -- we don't want things would get hairy.
 
 ## Operational transform *bling*
 Gulf expects you to provide an OT library that adhere's to [shareJs's OT type spec](https://github.com/share/ottypes#spec).
@@ -210,6 +214,15 @@ Update an editable document with local changes provided in `changes`. This wraps
 
 #### Event: update (edit:Edit)
 Fired when EditableDocument#update() has been called, but before the changes have been approved by the master. `edit` is the newly created Edit.
+
+#### gulf.EditableDocument#_change(cs:mixed, cb:Function)
+Needs to be implemented by you or by wrappers (see [Editor wrappers][#editor-wrappers]). Is called after the document has been initialized with `_setContents` for every change that is received from master.
+
+#### gulf.EditableDocument#_setContents(contents:mixed, cb:Function)
+Needs to be implemented by you or by wrappers (see [Editor wrappers][#editor-wrappers]). Is called if the document receives an `init` message or to reset the document in case of an error.
+
+#### gulf.EditableDocument#_collectChanges(cb:Function)
+Needs to be implemented by you or by wrappers (see [Editor wrappers][#editor-wrappers]). Is called right before `_change()` is called to keep track of any outstanding changes. This isn't necessary if you call `update()` in an event handler that listens on local change events.
 
 ### Class: gulf.Edit
 
