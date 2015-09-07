@@ -366,7 +366,7 @@ describe('gulf', function() {
         expect(contentA).to.equal(initialContent)
         expect(contentB).to.equal(initialContent)
         cb()
-      }, 700)
+      }, 1000)
     })
 
     it('should correctly propagate the first edit from one end to the other end', function(cb) {
