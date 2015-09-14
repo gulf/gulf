@@ -137,10 +137,11 @@ var document = new gulf.Document(new gulf.MemoryAdapter, textOT)
 ```
 
 ## Editor wrappers
-Since adding gulf syncing to an editor is a repetitive task and ard to get right (what with selection retention, generating diffs, etc.) there are wrappers, of course:
+Since adding gulf syncing to an editor is a repetitive task and hard to get right (what with selection retention, generating diffs, etc.) there are ready-made wrappers:
 
  * [contenteditable](https://github.com/marcelklehr/gulf-contenteditable)
  * [textarea/textinput](https://github.com/marcelklehr/gulf-textarea)
+ * [codemirror](https://github.com/marcelklehr/gulf-codemirror)
 
 ## Storage adapters
 Gulf allows you to store your data anywhere you like, if you can provide it with a storage adapter. It comes with an in-memory adapter, ready for you to test your app quickly, but when the time comes to get ready for production you will want to change to a persistent storage backend like mongoDB or redis.
@@ -216,13 +217,13 @@ Update an editable document with local changes provided in `changes`. This wraps
 Fired when EditableDocument#update() has been called, but before the changes have been approved by the master. `edit` is the newly created Edit.
 
 #### gulf.EditableDocument#_change(cs:mixed, cb:Function)
-Needs to be implemented by you or by wrappers (see [Editor wrappers][#editor-wrappers]). Is called after the document has been initialized with `_setContents` for every change that is received from master.
+Needs to be implemented by you or by wrappers (see [Editor wrappers](#editor-wrappers)). Is called after the document has been initialized with `_setContents` for every change that is received from master.
 
 #### gulf.EditableDocument#_setContents(contents:mixed, cb:Function)
-Needs to be implemented by you or by wrappers (see [Editor wrappers][#editor-wrappers]). Is called if the document receives an `init` message or to reset the document in case of an error.
+Needs to be implemented by you or by wrappers (see [Editor wrappers](#editor-wrappers)). Is called if the document receives an `init` message or to reset the document in case of an error.
 
 #### gulf.EditableDocument#_collectChanges(cb:Function)
-Needs to be implemented by you or by wrappers (see [Editor wrappers][#editor-wrappers]). Is called right before `_change()` is called to keep track of any outstanding changes. This isn't necessary if you call `update()` in an event handler that listens on local change events.
+Needs to be implemented by you or by wrappers (see [Editor wrappers](#editor-wrappers)). Is called right before `_change()` is called to keep track of any outstanding changes. This isn't necessary if you call `update()` in an event handler that listens on local change events.
 
 ### Class: gulf.Edit
 
