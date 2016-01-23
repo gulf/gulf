@@ -254,8 +254,8 @@ describe('gulf', function() {
           expect(contentB).to.equal('abcdxy1324QR')
           expect(contentB).to.equal(contentA)
           cb()
-        }, 100)
-      }, 100)
+        }, 500)
+      }, 500)
     })
   })
 
@@ -398,7 +398,7 @@ describe('gulf', function() {
         console.log(contentA, contentB)
         expect(contentB).to.eql(contentA)
         cb()
-      }, 500)
+      }, 1000)
     })
 
     after(function() {
