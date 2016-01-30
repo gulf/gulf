@@ -157,8 +157,53 @@ Currently implemented adapters are:
 #### new gulf.Link([opts:Object])
 Instantiates a new link, optionally with some options:
  * `opts.credentials` The credentials to be sent to the other end for authentication purposes.
- * `opts.authorizeWrite` A function which gets called when the other end writes a message, and has the following signature: `function (msg, receivedCredentials, cb)`
- * `opts.authorizeRead` A function which gets called when this side of the link writes a message, and has the following signature: `function (msg, receivedCredentials, cb)`
+ * `opts.authenticate` A functon which gets called with the credentials from the other side and has the following signature: `(credentials, cb(er, user))`
+ * `opts.authorizeWrite` A function which gets called when the other end writes a message, and has the following signature: `(msg, user, cb(er, granted))`; `user` is the value returned by your `authenticate` hook.
+ * `opts.authorizeRead` A function which gets called when this side of the link writes a message, and has the following signature: `(msg, user, cb(er, granted))`; `user` is the value returned by your `authenticate` hook.
+
+Here's an example of how to setup link authentication and authorization:
+
+```js
+var link = new gulf.Link({
+  authenticate: function(credentials, cb) {
+    authenticate('token', credentials)
+    .then((user) => {
+      cb(null, user)
+    })
+    .catch(cb)
+  }
+, authorizeWrite: function(msg, user, cb) {
+    switch(msg[0]) {
+      case 'edit':
+        authorize(user, 'document:change')
+        .then(allowed => cb(null, allowed))
+        .catch(cb)
+        break;
+      case 'ack':
+      case 'requestInit':
+        authorize(user, 'document:read')
+        .then(allowed => cb(null, allowed))
+        .catch(cb)
+        break;
+    }
+  }
+, authorizeRead:function(msg, user, cb) {
+    switch(msg[0]) {
+      case 'init':
+      case 'edit':
+        authorize(user, 'document:read')
+        .then(allowed => cb(null, allowed))
+        .catch(cb)
+        break;
+      case 'ack':
+        authorize(user, 'document:change')
+        .then(allowed => cb(null, allowed))
+        .catch(cb)
+        break;
+    }
+  }
+})
+```
 
 ### Class: gulf.Document
 

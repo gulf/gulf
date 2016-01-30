@@ -259,7 +259,7 @@ describe('gulf', function() {
     })
   })
 
-  describe('Linking to protected documents', function() {
+  describe('Linking to documents protected by authentication', function() {
     var docA, docB
     var linkA, linkB
 
@@ -268,13 +268,8 @@ describe('gulf', function() {
         docA = doc
         docB = new gulf.Document(new gulf.MemoryAdapter, ottype)
         linkA = docA.slaveLink({
-          authorizeRead: function(msg, credentials, cb) {
-            if(credentials == 'rightCredentials') return cb(null, true)
-            else return cb(null, false)
-          }
-        , authorizeWrite: function(msg, credentials, cb) {
-            if(credentials == 'rightCredentials') return cb(null, true)
-            else return cb(null, false)
+          authenticate: function(credentials, cb) {
+            cb(null, credentials == 'rightCredentials')
           }
         })
         cb()
@@ -291,12 +286,62 @@ describe('gulf', function() {
       }, 100)
     })
 
-    it('should not adopt the current document state if athentication failed', function(done) {
+    it('should not adopt the current document state if authentication failed', function(done) {
       linkB = docB.masterLink({credentials: 'wrongCredentials'})
       linkA.pipe(linkB).pipe(linkA)
 
       setTimeout(function() {
         expect(docB.content).to.eql(null)
+        done()
+      }, 100)
+    })
+  })
+  
+  describe('Linking to documents protected by write authorization', function() {
+    var docA, docB
+    var linkA, linkB
+    var initialContents = 'abc'
+
+    beforeEach(function(cb) {
+      gulf.Document.create(new gulf.MemoryAdapter, ottype, initialContents, function(er, doc) {
+        docA = doc
+        docB = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
+        docB._setContents = function(content, cb) {cb()}
+        docB._change = function(cs, cb) {cb()}
+        
+        linkA = docA.slaveLink({
+          authenticate: function(credentials, cb) {
+            cb(null, credentials == 'rightCredentials')
+          }
+        , authorizeWrite: function(msg, user, cb) {
+            if(msg[0] === 'requestInit'|| msg[0] === 'ack') return cb(null, true)
+            cb(null, false)
+          }
+        })
+        cb()
+      })
+    })
+
+    it('should adopt the current document state correctly', function(done) {
+      linkB = docB.masterLink({credentials: 'rightCredentials'})
+      linkA.pipe(linkB).pipe(linkA)
+
+      setTimeout(function() {
+        expect(docA.content).to.eql(docB.content)
+        done()
+      }, 100)
+    })
+
+    it('should not accept edits', function(done) {
+      linkB = docB.masterLink({credentials: 'rightCredentials'})
+      linkA.pipe(linkB).pipe(linkA)
+      
+      setImmediate(function() {
+        docB.update([3,'d'])
+      })
+
+      setTimeout(function() {
+        expect(docB.content).to.eql(initialContents)
         done()
       }, 100)
     })
