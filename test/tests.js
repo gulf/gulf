@@ -1,4 +1,4 @@
-/* global xdescribe, describe, it, xit */
+/* global describe, xdescribe, it, xit */
 var gulf, expect
   , ottype = require('ottypes').text
   , MuxDmx = require('mux-dmx')
@@ -172,8 +172,8 @@ describe('gulf', function() {
           cb()
         }
 
-        linkA = docA.masterLink()
-        linkB = docB.masterLink()
+        linkA = docA.masterLink(/*{timeout: 3000}*/)
+        linkB = docB.masterLink(/*{timeout: 3000}*/)
         cb()
       })
     })
@@ -201,6 +201,7 @@ describe('gulf', function() {
       }, 20)
     })
 
+    var slaveB
     it('should correctly propagate edits from one end to the other end', function(cb) {
       linkA.unpipe()
       linkB.unpipe()
@@ -221,7 +222,7 @@ describe('gulf', function() {
 
       setImmediate(function() {
         linkA.pipe(masterDoc.slaveLink()).pipe(linkA)
-        linkB.pipe(masterDoc.slaveLink()).pipe(linkB)
+        linkB.pipe(slaveB = masterDoc.slaveLink()).pipe(linkB)
       })
 
       setTimeout(function() {
@@ -231,31 +232,32 @@ describe('gulf', function() {
     })
 
     it('should catch up on reconnect', function(cb) {
+      this.timeout(12500)
+    
       // disconnect B
       linkB.unpipe()
-      masterDoc.links[3].unpipe()
+      slaveB.unpipe()
 
       contentA = 'abcdx1324'
-      docA.update([4, 'x']) // this edit will be sent
+      docA.update([4, 'x']) // this edit will be sent from A -> Master |-> B
 
       contentB = 'abcd1324QR'
-      docB.update([8, 'Q'])
-      docB.update([9, 'R'])
+      docB.update([8, 'Q']) // these edits will be sent from B |-> Master -> A
+      setImmediate(function() {
+        docB.update([9, 'R'])
+      })
 
       setTimeout(function() {
+        expect(masterDoc.content).to.equal('abcdx1324')
+
         // reconnect B
-        console.log('reconnect B')
         linkB.pipe(masterDoc.slaveLink()).pipe(linkB)
 
-        // change A
-        contentA = 'abcdxy1324'
-        docA.update([5, 'y'])
         setTimeout(function() {
-          expect(contentB).to.equal('abcdxy1324QR')
-          expect(contentB).to.equal(contentA)
+          expect(contentA).to.equal('abcdx1324RQ')
           cb()
-        }, 500)
-      }, 500)
+        }, 1000)
+      }, 1000)
     })
   })
 
