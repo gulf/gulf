@@ -150,6 +150,8 @@ Currently implemented adapters are:
  * [In-memory adapter](https://github.com/marcelklehr/gulf/blob/master/lib/MemoryAdapter.js)
  * [mongoDB adapter](https://github.com/marcelklehr/gulf-mongodb)
 
+If you'd like to write your own storage adapter, head on to the API docs.
+
 ## API
 
 ### Class: gulf.Link
@@ -161,42 +163,44 @@ Instantiates a new link, optionally with some options:
  * `opts.authorizeWrite` A function which gets called when the other end writes a message, and has the following signature: `(msg, user, cb(er, granted))`; `user` is the value returned by your `authenticate` hook.
  * `opts.authorizeRead` A function which gets called when this side of the link writes a message, and has the following signature: `(msg, user, cb(er, granted))`; `user` is the value returned by your `authenticate` hook.
 
+The return value of `opts.authenticate` is also used as the author field when saving snapshots.
+
 Here's an example of how to setup link authentication and authorization:
 
 ```js
 var link = new gulf.Link({
   authenticate: function(credentials, cb) {
     authenticate('token', credentials)
-    .then((user) => {
-      cb(null, user)
+    .then((userId) => {
+      cb(null, userId)
     })
     .catch(cb)
   }
-, authorizeWrite: function(msg, user, cb) {
+, authorizeWrite: function(msg, userId, cb) {
     switch(msg[0]) {
       case 'edit':
-        authorize(user, 'document:change')
+        authorize(userId, 'document:change')
         .then(allowed => cb(null, allowed))
         .catch(cb)
         break;
       case 'ack':
       case 'requestInit':
-        authorize(user, 'document:read')
+        authorize(userId, 'document:read')
         .then(allowed => cb(null, allowed))
         .catch(cb)
         break;
     }
   }
-, authorizeRead:function(msg, user, cb) {
+, authorizeRead:function(msg, userId, cb) {
     switch(msg[0]) {
       case 'init':
       case 'edit':
-        authorize(user, 'document:read')
+        authorize(userId, 'document:read')
         .then(allowed => cb(null, allowed))
         .catch(cb)
         break;
       case 'ack':
-        authorize(user, 'document:change')
+        authorize(userId, 'document:change')
         .then(allowed => cb(null, allowed))
         .catch(cb)
         break;
@@ -305,13 +309,27 @@ Serializes this edit.
 #### gulf.Edit#clone() : Edit
 Returns a new edit instance that has exactly the same properties as this one.
 
-## FAQ
+### Adapter
+A snapshot is an object that looks like this:
 
-How does it work? Gulf uses operational transformation, which is all about making edits fit. Node.js streams make sure linking documents is a pure joy. Everything else is in teh codez.
+```js
+{
+  id: 'sdgh684eb68eth'
+, changes: '[0, "h"]'
+, parent: '5dfhg68aefh65ae' // ID of another snapshot
+, contents: '"Hello world"' // stringified representation of the new contents
+, author: 12 // The id of the author, as returned by `opts.authenticate` in the Link options (or the value you passed to gulf.Document#receiveEdit, if you passed in the edit directly)
+}
+```
 
-Does it support peer-to-peer linking? No.
+If you're having trouble writing your own adapter, check out [the in-memory adapter](https://github.com/marcelklehr/gulf/blob/master/lib/MemoryAdapter.js) and the [mongoDB adapter](https://github.com/marcelklehr/gulf-mongodb).
 
-Why? Well, Peer-to-peer is a pain-in-the-ass scenario with operational transformation and not at all performant. If you have a peer-to-peer scenario electing a master might be easier.
+#### Adapter#createDocument(initialSnapshot, cb(er, docId))
+#### Adapter#getFirstSnapshot(docId, cb(er, snapshot))
+#### Adapter#getLatestSnapshot(docId, cb(er, snapshot))
+#### Adapter#storeSnapshot(docId, snapshot, cb(er))
+#### Adapter#existsSnapshot(docId, editId, cb(er, exists:Bool))
+#### Adapter#getSnapshotsAfter(docId, editId, cb(er, snapshots:Array))
 
 ## Tests?
 ```
