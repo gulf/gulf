@@ -337,6 +337,6 @@ If you're having trouble writing your own adapter, check out [the in-memory adap
 ```
 
 ## License
-(c) 2013-2015 by Marcel Klehr
+(c) 2013-2016 by Marcel Klehr
 
-GNU General Public License
+GNU Lesser General Public License
