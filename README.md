@@ -54,6 +54,16 @@ net.connect(7453, function(socket) {
 
 And they'll stay in sync.
 
+### Extensions
+You can sync any document type you have an ot type implementation for. Currently available packages are wrappers for:
+
+ * [contenteditable](https://github.com/marcelklehr/gulf-contenteditable)
+ * [textarea/textinput](https://github.com/marcelklehr/gulf-textarea)
+ * [codemirror](https://github.com/marcelklehr/gulf-codemirror)
+
+### Above and Beyond
+Check out [Hive.js](http://hivejs.org) a collaboration platform with gulf at its core.
+
 ## Usage
 
 ## Documents
