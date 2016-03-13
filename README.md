@@ -233,8 +233,8 @@ Instantiates a new, empty Document.
 #### gulf.Document.create(adapter, ottype, contents, cb)
 Creates a documents with pre-set contents. `cb` will be called with `(er, doc)`.
 
-#### gulf.Document.load(adapter, ottype, cb)
-Loads a document from the storage. Since there's one instance of a storage adapter per document, you need to pass the information *which* document to load to the adapter instance. `cb` will be called with `(er, doc)`.
+#### gulf.Document.load(adapter, ottype, documentId, cb)
+Loads a document from the storage. `cb` will be called with `(er, doc)`.
 
 #### gulf.Document#slaveLink(opts:Object) : Link
 Creates a link with `opts` passed to the Link constructor and attaches it as a slave link.
