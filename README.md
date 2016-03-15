@@ -57,9 +57,9 @@ And they'll stay in sync.
 ### Extensions
 You can sync any document type you have an ot type implementation for. Currently available packages are wrappers for:
 
- * [contenteditable](https://github.com/marcelklehr/gulf-contenteditable)
- * [textarea/textinput](https://github.com/marcelklehr/gulf-textarea)
- * [codemirror](https://github.com/marcelklehr/gulf-codemirror)
+ * [contenteditable](https://github.com/marcelklehr/gulf-contenteditable) (using DOM OT)
+ * [textarea/textinput](https://github.com/marcelklehr/gulf-textarea) (using text OT)
+ * [codemirror](https://github.com/marcelklehr/gulf-codemirror) (using text OT)
 
 ### Above and Beyond
 Check out [Hive.js](http://hivejs.org) a collaboration platform with gulf at its core.
@@ -92,10 +92,14 @@ Now that we've connected all documents, every time Alice or Bob make a change th
 Since we're in a globalized world we can't expect all documents to be on the same machine. That's why a Link is a simple DuplexStream. You may pipe it to a tcp socket or a websocket or some other stream. Of course that means that you need two instances of a Link -- one for each side of the connection.
 
 ```js
-masterDoc = new gulf.Document(adapter, ot)
-
-socket.pipe(masterDoc.slaveLink()).pipe(socket)
+gulf.Document.create(adapter, ot, initialContents, (er, masterDoc) => {
+  net.createserver((socket) => {
+    socket.pipe(masterDoc.slaveLink()).pipe(socket) // for each socket
+  }).listen(1234)
+})
 ```
+
+The master doc has the final say in whether an edit is accepted, and so it always holds what you can consider the actual document contents, the *absolute truth* if you will. Thus you must initialize it with the initial document contents, otherwise no one will know where to start from.
 
 ```js
 slaveDoc = new gulf.Document(adapter, ot)
@@ -127,7 +131,7 @@ document._collectChanges = functioncb() {
 }
 ```
 
-Before anything can happen, the document is initialized wwith `_setContents`.
+Before anything can happen, the editable document is initialized wwith `_setContents`.
 
 Everytime the document is changed by an incoming edit `_change` is called with the changeset.
 
