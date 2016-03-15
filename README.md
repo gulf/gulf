@@ -67,24 +67,22 @@ Check out [Hive.js](http://hivejs.org) a collaboration platform with gulf at its
 ## Usage
 
 ## Documents
-A document may contain arbitrary data (as long as you provide an ottype that can handle that kind of data, but we're getting ahead of ourselves). The content of a document is available in `myDocument.content` (which is read-only for you!) and that's basically all a document can do.
+A document may contain arbitrary data. The content of a document is available in `myDocument.content` (which is read-only!).
 
 Now, how do I change this document if `Document#content` is untouchable? Well, thankfully there's also EditableDocuments.
 
-Editable documents can be updated via the `update(cs)` method. The `cs` stands for changeset. A changeset contains the changes to a document. (There are many ways you can create such a changeset, right now we use the simple method of imagination: *bling* -- there it is, see it?)
+Editable documents can be updated via the `update(cs)` method. The `cs` is short for changeset. A changeset contains the changes to a document. (There are quite a few ways you can create such a changeset, all specific to the OT implementation you're using, right now we use the simple method of imagination: *bling* -- there it is, see it?)
 
 Ok, now we update our editable document and we notice that it keeps a record of all revisions -- all documents remember every change ever done. Nice.
 
 ## Linking documents
-Now, Alice and Bob each have a document, actually it's "the same" document. At least it should be, oh -- wait: Bob has made some changes to his version, and Alice of course couldn't resist to write some introductory paragraph again.
+Now, Alice and Bob each have a document and want to sync them. For this, we need some kind of mediator document that takes care of the syncing process to keep things sane. In gulf this mediator is called the master document. It has the final say in which edit is accepted and how the edits are ordered.
 
-Now it's not the same document anymore -- but if we connect the two, they'll always be in sync, right? We just need some kind of mediator that takes care of the syncing process to keep things sane (imagine, if David had changed his document, too!).
+Now, somehow Alice and Bob need to link their documents to that master document in order to send it the changes they make.
 
-This mediator is also in possession of, surprise, a Document. It's doesn't need to be editable, though. Now, somehow Alice and Bob need to link their documents to that master document and send it the changes they make.
+Well, Links we have. If Alice wants to connect to the master document, she creates a master link to it. The master document attaches Alice's link as a slave link.
 
-Well, Links we have. If Alice wants to connect to the master document, she creates a Link to it and attaches it to her document as a master link. The master document attaches Alice's link as a slave link.
-
-A document can have many slave links, but only one master link ( EditableDocuments have no slave links, but you can always put another document in front of them).
+A document can have many slaves, but only one master link (EditableDocuments have no slave links).
 
 Now that we've connected all documents, every time Alice or Bob make a change the edits will just flow to the other documents.
 
