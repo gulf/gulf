@@ -1,4 +1,6 @@
 # Gulf [![Build Status](https://travis-ci.org/marcelklehr/gulf.png)](https://travis-ci.org/marcelklehr/gulf)
+
+[![Join the chat at https://gitter.im/marcelklehr/gulf](https://badges.gitter.im/marcelklehr/gulf.svg)](https://gitter.im/marcelklehr/gulf?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 OT is too hard on you? The Gulf stream will sync your documents in real-time. Anywhere in the world, in node.js and the browser!
 
 ![Gulf stream (Public domain)](https://upload.wikimedia.org/wikipedia/commons/1/19/Golfstrom.jpg)
