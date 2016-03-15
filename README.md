@@ -164,6 +164,14 @@ Currently implemented adapters are:
 
 If you'd like to write your own storage adapter, head on to the API docs.
 
+## Examples
+It's probably easiest to observe gulf in action. So, have a look at these examples.
+
+ * https://gist.github.com/marcelklehr/0430be7e3fb45a83189b -- a small html page with two contenteditables that are synced.
+ * https://github.com/marcelklehr/warp -- a complete web server serving a collaborative editor, driven by CKeditor, sockJS and gulf-contenteditable
+
+**Additions wanted:** If you have the perfect example show-casing gulf or its related libraries leave me a note via email or [the issues](https://github.com/marcelklehr/gulf/issues).
+
 ## API
 
 ### Class: gulf.Link
