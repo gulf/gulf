@@ -290,6 +290,9 @@ The following are the defaults for the options (just `mergeQueue` at this time):
 }
 ```
 
+#### Event: editableInitialized
+Fired when gulf has received the init packet and has set the contents via `EditableDocument#_setContents`.
+
 #### gulf.EditableDocument#update(changes:mixed)
 Update an editable document with local changes provided in `changes`. This wraps the changes in an Edit and sends them to master.
 
