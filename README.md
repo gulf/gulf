@@ -298,6 +298,9 @@ Fired when EditableDocument#update() has been called, but before the changes hav
 
 **Note:** If queue merging is enabled, the supplied edit may be merged with other outstanding edits before being sent to the server. Thus, if queue merging is enabled, it is not guaranteed that you will get a `commit` event for every edit that you got an `update` event for.
 
+#### Event: commit (edit:Edit)
+Fired when a submitted edit has been accepted and acknowleged by the server.
+
 #### gulf.EditableDocument#_change(cs:mixed, cb:Function)
 Needs to be implemented by you or by wrappers (see [Editor wrappers](#editor-wrappers)). Is called after the document has been initialized with `_setContents` for every change that is received from master.
 
