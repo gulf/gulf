@@ -278,14 +278,25 @@ Applies an edit to the document's content.
 #### gulf.Document#distributeEdit(edit:Edit, [fromLink:Link])
 Sends the passed edit to all attached links, except to `fromLink`.
 
-### Class: gulf.EditableDocument
-This class extends `gulf.Document` and overrides some of its methods.Most important among those are `gulf.EditableDocument#sanitizeEdit()` which is changed to transform the incoming edit against the ones queued in the master link and transform those against the incoming one, and `glf.EditableDocument#applyEdit` which is changed to call `_change` with the changes and the resulting contents.
+### Class: gulf.EditableDocument(adapter, ottype, options)
+This class extends `gulf.Document` and overrides some of its methods.
+Most important among those are `gulf.EditableDocument#sanitizeEdit()` which is changed to transform the incoming edit against the ones queued in the master link and transform those against the incoming one,
+and `gulf.EditableDocument#applyEdit` which is changed to call `_change` with the changes and the resulting contents.
+
+The following are the defaults for the options (just `mergeQueue` at this time):
+```
+{
+  mergeQueue: true // If gulf should merge multiple outstanding edits into one, for faster collaboration.
+}
+```
 
 #### gulf.EditableDocument#update(changes:mixed)
 Update an editable document with local changes provided in `changes`. This wraps the changes in an Edit and sends them to master.
 
 #### Event: update (edit:Edit)
 Fired when EditableDocument#update() has been called, but before the changes have been approved by the master. `edit` is the newly created Edit.
+
+**Note:** If queue merging is enabled, the supplied edit may be merged with other outstanding edits before being sent to the server. Thus, if queue merging is enabled, it is not guaranteed that you will get a `commit` event for every edit that you got an `update` event for.
 
 #### gulf.EditableDocument#_change(cs:mixed, cb:Function)
 Needs to be implemented by you or by wrappers (see [Editor wrappers](#editor-wrappers)). Is called after the document has been initialized with `_setContents` for every change that is received from master.
