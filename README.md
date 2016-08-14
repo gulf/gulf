@@ -380,3 +380,28 @@ If you're having trouble writing your own adapter, check out [the in-memory adap
 (c) 2013-2016 by Marcel Klehr
 
 GNU Lesser General Public License
+
+## Changelog
+
+v4.0.5
+ * Fix memory leak: Doc#detachLink on Link:'finish'
+
+v4.0.4
+ * Fix reconnect catching-up
+
+v4.0.3
+ * Clear sentEdit timeout on Link#reset
+ * Remove pointless guard in Link#send
+
+v4.0.2
+ *  Fix createDocument. history wasn't passing on doc.id
+ *  Change code header: LGPL
+
+v4.0.1
+ * License under LGPL :fireworks:
+
+v4.0.0
+ * Revamp Adapter interface
+ *  Add author to snapshots: Use link.authenticated as author value
+ *  Implement commit retry: Default edit sending timeout is 10s
+ *  Revamp auth: Clearly separate authentication from authorization
