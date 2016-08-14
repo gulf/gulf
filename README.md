@@ -383,6 +383,11 @@ GNU Lesser General Public License
 
 ## Changelog
 
+v4.1.0
+ * EditableDoc: add Event `editableInitialized`
+ * EditableDoc: add Event `commit`
+ * Add option `mergeQueue`
+    
 v4.0.5
  * Fix memory leak: Doc#detachLink on Link:'finish'
 
