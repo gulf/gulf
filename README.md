@@ -372,9 +372,20 @@ If you're having trouble writing your own adapter, check out [the in-memory adap
 #### Adapter#getSnapshotsAfter(docId, editId, cb(er, snapshots:Array))
 
 ## Tests?
+
+### Node.js
+To run the tests in node, run the following after installing the devDependencies:
 ```
-> mocha
+npm test
 ```
+### Browser
+To run the tests in the browser, browserify gulf:
+
+```
+npm run build
+```
+
+and open `test.html` in the browser of your choice.
 
 ## License
 (c) 2013-2016 by Marcel Klehr

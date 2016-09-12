@@ -6,7 +6,8 @@ var gulf, expect
 
 
 try {
-  gulf = require('gulf')
+  gulf = 'gulf'
+  gulf = require(gulf)
 }catch(e) {
   console.log(e)
   gulf = require('../')
@@ -337,19 +338,21 @@ describe('gulf', function() {
     it('should not accept edits', function(done) {
       linkB = docB.masterLink({credentials: 'rightCredentials'})
       linkA.pipe(linkB).pipe(linkA)
-      
-      setImmediate(function() {
+
+      setTimeout(function() {
         docB.update([3,'d'])
-      })
+      }, 100)
 
       setTimeout(function() {
         expect(docB.content).to.eql(initialContents)
         done()
-      }, 100)
+      }, 200)
     })
   })
 
   describe('Linking documents in parallel environments', function() {
+    if (process.browser) return this.skip()
+
     var initialContent = 'abc'
     var master, docA, docB
     var linkA, linkB

@@ -22,14 +22,16 @@
   ],
   "main": "./lib/index",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "build": "browserify test/tests.js > tests.brwsr.js"
   },
   "devDependencies": {
-    "mocha": "*",
+    "mocha": "3.x",
     "expect.js": "*",
     "ottypes": "*",
     "mux-dmx": "*",
-    "through2": "*"
+    "through2": "*",
+    "browserify": "*"
   },
   "author": "Marcel Klehr <mklehr@gmx.net>",
   "license": [
