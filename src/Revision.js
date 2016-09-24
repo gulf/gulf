@@ -1,6 +1,6 @@
 /**
  * gulf - Sync anything!
- * Copyright (C) 2013-2015 Marcel Klehr <mklehr@gmx.net>
+ * Copyright (C) 2013-2016 Marcel Klehr <mklehr@gmx.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -15,62 +15,64 @@
  * You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-function Edit(ottype) {
+function Revision(ottype) {
   this.id
-  this.changeset
   this.parent
+  this.changeset
+  this.content = null
+  this.author
   this.ottype = ottype
-  if(!ottype) throw new Error('Edit: No ottype specified')
+  if(!ottype) throw new Error('Revision: No ottype specified')
 }
 
-module.exports = Edit
+module.exports = Revision
 
-Edit.unpack = function(json, ottype) {
+Revision.deserialize = function(json, ottype) {
   json = JSON.parse(json)
+  return Revision.fromJSON(json, ottype)
+}
 
-  var edit = new Edit(ottype)
-  edit.id = json.id
-  if(json.cs) {
-    edit.changeset = JSON.parse(json.cs)
+Revision.fromJSON = function(json, ottype) {
+  if (json.type && ottype.uri !== json.type) throw new Error('Passed OT type does not match serialized revision')
+
+  var r = new Revision(ottype) 
+  r.id = json.id
+  if (!r.id) throw new Error('Serialized revision does not have an ID')
+  
+  r.parent = json.parent
+  r.changeset = json.changeset
+  r.author = json.author
+  if (json.content) {
+    if(ottype.deserialize) r.content = ottype.deserialize(json.content)
+    else r.content = json.content
   }
-  edit.parent = json.parent
-  return edit
+  return r
 }
 
 /**
  * Returns an empty edit.
  */
-Edit.newInitial = function(ottype) {
-  var edit = new Edit(ottype)
+Revision.newInitial = function(ottype, content) {
+  var edit = new Revision(ottype)
   edit.id = randString()
+  edit.content = content
   return edit
 }
 
 /**
  * Returns an edit with the changes in cs
  */
-Edit.newFromChangeset = function(cs, ottype) {
-  var edit = new Edit(ottype)
+Revision.newFromChangeset = function(cs, ottype) {
+  var edit = new Revision(ottype)
   edit.id = randString()
   edit.changeset = cs
   return edit
 }
 
 /**
- * Returns an edit overtaking every necessary attrib from the snapshot
- */
-Edit.fromSnapshot = function(s, ottype) {
-  var edit = new Edit(ottype)
-  edit.changeset = s.changes? JSON.parse(s.changes) : s.changes
-  edit.id = s.id
-  edit.parent = s.parent
-  return edit
-}
-
-/**
  * Applies this edit on a snapshot
  */
-Edit.prototype.apply = function(snapshot) {
+Revision.prototype.apply = function(snapshot) {
   if(!this.changeset) return snapshot
   return this.ottype.apply(snapshot, this.changeset)
 }
@@ -79,7 +81,7 @@ Edit.prototype.apply = function(snapshot) {
  * Transforms this edit to come after the passed
  * edit (rewrites history).
  */
-Edit.prototype.follow = function(edit, left) {
+Revision.prototype.follow = function(edit, left) {
   if(this.parent != edit.parent) throw new Error('Trying to follow an edit that is not a direct sibling.')
   this.transformAgainst(edit, left)
   this.parent = edit.id
@@ -89,30 +91,42 @@ Edit.prototype.follow = function(edit, left) {
  * Transforms the cahnges this edit makes against the ones that
  * the passed edit makes. This doesn't rewrite history, but manipulates silently.
  */
-Edit.prototype.transformAgainst = function(edit, left) {
+Revision.prototype.transformAgainst = function(edit, left) {
   this.changeset = this.ottype.transform(this.changeset, edit.changeset, /*side:*/left?'left':'right')
 }
 
-Edit.prototype.merge = function(edit) {
-  return Edit.newFromChangeset(this.ottype.compose(this.changeset, edit.changeset), this.ottype)
+Revision.prototype.merge = function(edit) {
+  return Revision.newFromChangeset(this.ottype.compose(this.changeset, edit.changeset), this.ottype)
 }
 
-Edit.prototype.pack = function() {
+Revision.prototype.toJSON = function(withContent) {
   var o = {
     parent: this.parent
   , id: this.id
+  , content: null
+  , author: this.author
   }
   if(this.changeset) {
-    o.cs = JSON.stringify(this.changeset)
+    o.changeset = this.changeset
   }
-  return JSON.stringify(o)
+  if (withContent && this.content) {
+    if (this.ottype.serialize) o.content = this.ottype.serialize(this.content)
+    else o.content = this.content
+  }
+  return o
 }
 
-Edit.prototype.clone = function() {
-  var edit = new Edit(this.ottype)
+Revision.prototype.serialize = function(withContent) {
+  return JSON.stringify(this.toJSON(withContent))
+}
+
+Revision.prototype.clone = function() {
+  var edit = new Revision(this.ottype)
   edit.id = this.id
   edit.parent = this.parent
   edit.changeset = this.changeset
+  edit.content = this.content
+
   return edit
 }
 

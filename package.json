@@ -9,7 +9,8 @@
   "dependencies": {
     "debug": "^2.2",
     "setimmediate": "1.x",
-    "queue": "3.x"
+    "queue": "3.x",
+    "co": "4.x"
   },
   "keywords": [
     "operational transformation",
