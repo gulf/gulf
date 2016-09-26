@@ -25,8 +25,8 @@
   ],
   "main": "./lib/index",
   "scripts": {
-    "test": "mocha test/tests.js; zuul -- test/tests.es5.js",
-    "test-local": "mocha test/tests.js; zuul --local -- test/tests.es5.js",
+    "test": "mocha test/tests.js && zuul -- test/tests.es5.js",
+    "test-local": "mocha test/tests.js && zuul --local -- test/tests.es5.js",
     "build": "babel src --out-dir lib; babel test/tests.js --out-file test/tests.es5.js"
   },
   "babel": {
