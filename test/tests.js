@@ -1,18 +1,9 @@
 /* global describe, xdescribe, it, xit */
-var gulf, expect
+var gulf = require('../')
+  , expect = require('expect.js')
   , ottype = require('ottypes').text
   , MuxDmx = require('mux-dmx')
   , through = require('through2')
-
-
-try {
-  gulf = 'gulf'
-  gulf = require(gulf)
-}catch(e) {
-  console.log(e)
-  gulf = require('../')
-  expect = require('expect.js')
-}
 
 describe('gulf', function() {
 
@@ -21,13 +12,19 @@ describe('gulf', function() {
     var linkA, linkB
 
     before(function(cb) {
-      gulf.Document.create(new gulf.MemoryAdapter, ottype, 'abc', function(er, doc) {
+      gulf.Document.create('abc', {
+        storageAdapter: new gulf.MemoryAdapter
+      , ottype: ottype
+      }).then(function(doc) {
         docA = doc
-        docB = new gulf.Document(new gulf.MemoryAdapter, ottype)
+        docB = new gulf.Document({
+          storageAdapter: new gulf.MemoryAdapter
+        , ottype: ottype
+        })
         linkA = docA.slaveLink()
         linkB = docB.masterLink()
         cb()
-      })
+      }, cb)
     })
 
     it('should adopt the current document state correctly', function(done) {
@@ -47,26 +44,30 @@ describe('gulf', function() {
     var content
 
     before(function(cb) {
-      gulf.Document.create(new gulf.MemoryAdapter, ottype, initialContent, function(er, doc) {
+      gulf.Document.create(initialContent, {
+        storageAdapter: new gulf.MemoryAdapter
+      , ottype: ottype
+      }).then(function(doc) {
         docA = doc
-        docB = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
+        docB = new gulf.EditableDocument({storageAdapter: new gulf.MemoryAdapter, ottype: ottype})
 
         content = ''
-        docB._collectChanges = function(cb) { cb() }
-        docB._setContents = function(newcontent, cb) {
+        docB._onBeforeChange = function() { return Promise.resolve() }
+        docB._setContent = function(newcontent) {
           content = newcontent
-          cb()
+          return Promise.resolve()
         }
-        docB._change = function(cs, cb) {
+        docB._onChange = function(cs) {
           content = ottype.apply(content, cs)
-          console.log('_change: ', content)
-          cb()
+          console.log('_onChange: ', content)
+          return Promise.resolve()
         }
 
         linkA = docA.slaveLink()
         linkB = docB.masterLink()
         cb()
       })
+      .catch(cb)
     })
 
 
@@ -90,8 +91,8 @@ describe('gulf', function() {
 
     it('should replicate insertions across links', function(done) {
       content = 'abcd' // We mimick some edit->cs algo here
-      docB.update([3, 'd']) // *bling*
-
+      docB.submitChange([3, 'd']) // *bling*
+.catch(console.log) 
       setTimeout(function() {
         console.log('DocB:', docB.content, 'DocA', docA.content)
         expect(docB.content).to.eql(content)
@@ -102,20 +103,20 @@ describe('gulf', function() {
 
     it('should replicate multiple insertions across links', function(done) {
       content = 'abcdefg' // We mimick some edit->cs algo here
-      docB.update([4, 'e']) // *bling*
-      docB.update([5, 'f']) // *bling*
-      docB.update([6, 'g']) // *bling*
+      docB.submitChange([4, 'e']) // *bling*
+      docB.submitChange([5, 'f']) // *bling*
+      docB.submitChange([6, 'g']) // *bling*
 
       setTimeout(function() {
         console.log('DocB:', docB.content, 'DocA', docA.content)
         expect(docB.content).to.eql(content)
         expect(docA.content).to.eql(content)
         done()
-      }, 20)
+      }, 50)
     })
 
     it('should re-init on error', function(done) {
-      docB.update([10, 'e']) // an obviously corrupt edit
+      docB.submitChange([10, 'e']) // an obviously corrupt edit
 
       setTimeout(function() {
         console.log('DocB:', docB.content, 'DocA', docA.content)
@@ -126,7 +127,7 @@ describe('gulf', function() {
 
     it('should propagate edits correctly after re-init', function(done) {
       content = 'abcdefgh'
-      docB.update([7, 'h']) // an correct edit
+      docB.submitChange([7, 'h']) // an correct edit
 
       setTimeout(function() {
         console.log('DocB:', docB.content, 'DocA', docA.content)
@@ -144,81 +145,85 @@ describe('gulf', function() {
     var contentA, contentB
 
     before(function(cb) {
-      gulf.Document.create(new gulf.MemoryAdapter, ottype, initialContent, function(er, doc) {
+      gulf.Document.create(initialContent, {
+        storageAdapter: new gulf.MemoryAdapter
+      , ottype: ottype
+      }).then(function(doc) {
         masterDoc = doc
 
-        docA = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
+        docA = new gulf.EditableDocument({storageAdapter: new gulf.MemoryAdapter, ottype: ottype})
         contentA = ''
-        docA._collectChanges = function(cb) {cb()}
-        docA._setContents = function(newcontent, cb) {
+        docA._onBeforeChange = function() {return Promise.resolve()}
+        docA._setContent = function(newcontent) {
           contentA = newcontent
-          cb()
+          return Promise.resolve()
         }
-        docA._change = function(cs, cb) {
+        docA._onChange = function(cs) {
           contentA = ottype.apply(contentA, cs)
-          console.log('_change(A): ', cs, contentA)
-          cb()
+          console.log('_onChange(A): ', cs, contentA)
+          return Promise.resolve()
         }
 
-        docB = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
+        docB = new gulf.EditableDocument({storageAdapter: new gulf.MemoryAdapter, ottype: ottype})
         contentB = ''
-        docB._collectChanges = function(cb) {cb()}
-        docB._setContents = function(newcontent, cb) {
+        docB._onBeforeChange = function() {return Promise.resolve()}
+        docB._setContent = function(newcontent) {
           contentB = newcontent
-          cb()
+          return Promise.resolve()
         }
-        docB._change = function(cs, cb) {
+        docB._onChange = function(cs) {
           contentB = ottype.apply(contentB, cs)
-          console.log('_change(B): ', cs, contentB)
-          cb()
+          console.log('_onChange(B): ', cs, contentB)
+          return Promise.resolve()
         }
 
         linkA = docA.masterLink(/*{timeout: 3000}*/)
         linkB = docB.masterLink(/*{timeout: 3000}*/)
         cb()
       })
+      .catch(cb)
     })
 
-    it('should correctly propagate the initial contents', function(cb) {
+    it('should correctly propagate the initial contents', function(done) {
       linkA.pipe(masterDoc.slaveLink()).pipe(linkA)
       linkB.pipe(masterDoc.slaveLink()).pipe(linkB)
 
       setTimeout(function() {
         expect(contentA).to.eql(initialContent)
         expect(contentB).to.eql(initialContent)
-        cb()
+        done()
       }, 20)
     })
 
-    it('should correctly propagate the first edit from one end to the other end', function(cb) {
+    it('should correctly propagate the first edit from one end to the other end', function(done) {
       contentA = 'abcd'
-      docA.update([3, 'd'])
+      docA.submitChange([3, 'd'])
 
       setTimeout(function() {
         expect(docA.content).to.eql(contentA)
         expect(docB.content).to.eql(contentA)
         expect(contentB).to.eql(contentA)
-        cb()
+        done()
       }, 20)
     })
 
     var slaveB
-    it('should correctly propagate edits from one end to the other end', function(cb) {
+    it('should correctly propagate edits from one end to the other end', function(done) {
       linkA.unpipe()
       linkB.unpipe()
       masterDoc.links[0].unpipe()
       masterDoc.links[1].unpipe()
 
       contentA = 'abcd12'
-      docA.update([4, '1']) // this edit will be sent
+      docA.submitChange([4, '1']) // this edit will be sent
       setImmediate(function() {
-        docA.update([5, '2']) // this edit will be queued
+        docA.submitChange([5, '2']) // this edit will be queued
       })
 
       contentB = 'abcd34'
-      docB.update([4, '3']) // this edit will be sent
+      docB.submitChange([4, '3']) // this edit will be sent
       setImmediate(function() {
-        docB.update([5, '4']) // this edit will be queued
+        docB.submitChange([5, '4']) // this edit will be queued
       })
 
       setImmediate(function() {
@@ -227,12 +232,13 @@ describe('gulf', function() {
       })
 
       setTimeout(function() {
+        expect(contentA).to.eql('abcd1324')
         expect(contentB).to.eql(contentA)
-        cb()
-      }, 500)
+        done()
+      }, 1000)
     })
 
-    it('should catch up on reconnect', function(cb) {
+    it('should catch up on reconnect', function(done) {
       this.timeout(12500)
     
       // disconnect B
@@ -240,12 +246,12 @@ describe('gulf', function() {
       slaveB.unpipe()
 
       contentA = 'abcdx1324'
-      docA.update([4, 'x']) // this edit will be sent from A -> Master |-> B
+      docA.submitChange([4, 'x']) // this edit will be sent from A -> Master |-> B
 
       contentB = 'abcd1324QR'
-      docB.update([8, 'Q']) // these edits will be sent from B |-> Master -> A
+      docB.submitChange([8, 'Q']) // these edits will be sent from B |-> Master -> A
       setImmediate(function() {
-        docB.update([9, 'R'])
+        docB.submitChange([9, 'R'])
       })
 
       setTimeout(function() {
@@ -256,7 +262,7 @@ describe('gulf', function() {
 
         setTimeout(function() {
           expect(contentA).to.equal('abcdx1324RQ')
-          cb()
+          done()
         }, 1000)
       }, 1000)
     })
@@ -266,17 +272,21 @@ describe('gulf', function() {
     var docA, docB
     var linkA, linkB
 
-    beforeEach(function(cb) {
-      gulf.Document.create(new gulf.MemoryAdapter, ottype, 'abc', function(er, doc) {
+    beforeEach(function(done) {
+      gulf.Document.create('abc', {
+        storageAdapter: new gulf.MemoryAdapter
+      , ottype: ottype
+      }).then(function(doc) {
         docA = doc
-        docB = new gulf.Document(new gulf.MemoryAdapter, ottype)
+        docB = new gulf.Document({storageAdapter: new gulf.MemoryAdapter, ottype: ottype})
         linkA = docA.slaveLink({
-          authenticate: function(credentials, cb) {
-            cb(null, credentials == 'rightCredentials')
+          authenticate: function(credentials) {
+            return Promise.resolve(credentials == 'rightCredentials')
           }
         })
-        cb()
+        done()
       })
+      .catch(done)
     })
 
     it('should adopt the current document state correctly', function(done) {
@@ -306,23 +316,27 @@ describe('gulf', function() {
     var initialContents = 'abc'
 
     beforeEach(function(cb) {
-      gulf.Document.create(new gulf.MemoryAdapter, ottype, initialContents, function(er, doc) {
+      gulf.Document.create(initialContents, {
+        storageAdapter: new gulf.MemoryAdapter
+      , ottype: ottype
+      }).then(function(doc) {
         docA = doc
-        docB = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
-        docB._setContents = function(content, cb) {cb()}
-        docB._change = function(cs, cb) {cb()}
+        docB = new gulf.EditableDocument({storageAdapter: new gulf.MemoryAdapter, ottype: ottype})
+        docB._setContent = function(content) {return Promise.resolve()}
+        docB._onChange = function(cs) {return Promise.resolve()}
+        docB._onBeforeChange = function() {return Promise.resolve()}
         
         linkA = docA.slaveLink({
-          authenticate: function(credentials, cb) {
-            cb(null, credentials == 'rightCredentials')
+          authenticate: function(credentials) {
+            return Promise.resolve(credentials == 'rightCredentials')
           }
-        , authorizeWrite: function(msg, user, cb) {
-            if(msg[0] === 'requestInit'|| msg[0] === 'ack') return cb(null, true)
-            cb(null, false)
+        , authorizeWrite: function(msg, user) {
+            return Promise.resolve(msg[0] === 'requestInit'|| msg[0] === 'ack')
           }
         })
         cb()
       })
+      .catch(cb)
     })
 
     it('should adopt the current document state correctly', function(done) {
@@ -340,7 +354,7 @@ describe('gulf', function() {
       linkA.pipe(linkB).pipe(linkA)
 
       setTimeout(function() {
-        docB.update([3,'d'])
+        docB.submitChange([3,'d'])
       }, 100)
 
       setTimeout(function() {
@@ -359,30 +373,30 @@ describe('gulf', function() {
     var contentA, contentB
 
     before(function(cb) {
-      docA = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
+      docA = new gulf.EditableDocument({storageAdapter: new gulf.MemoryAdapter, ottype: ottype})
       contentA = ''
-      docA._collectChanges = function(cb) {cb()}
-      docA._setContents = function(newcontent, cb) {
+      docA._onBeforeChange = function() {return Promise.resolve()}
+      docA._setContent = function(newcontent) {
         contentA = newcontent
-        cb()
+        return Promise.resolve()
       }
-      docA._change = function(cs, cb) {
-        contentA = ottype.apply(contentA,cs )
-        console.log('_change(A): ', cs, contentA)
-        cb()
+      docA._onChange = function(cs) {
+        contentA = ottype.apply(contentA, cs)
+        console.log('_onChange(A): ', cs, contentA)
+        return Promise.resolve()
       }
 
-      docB = new gulf.EditableDocument(new gulf.MemoryAdapter, ottype)
+      docB = new gulf.EditableDocument({storageAdapter: new gulf.MemoryAdapter, ottype: ottype})
       contentB = ''
-      docB._collectChanges = function(cb) {cb()}
-      docB._setContents = function(newcontent, cb) {
+      docB._onBeforeChange = function() {return Promise.resolve()}
+      docB._setContent = function(newcontent) {
         contentB = newcontent
-        cb()
+        return Promise.resolve()
       }
-      docB._change = function(cs, cb) {
+      docB._onChange = function(cs) {
         contentB = ottype.apply(contentB, cs)
-        console.log('_change(B): ', cs, contentB)
-        cb()
+        console.log('_onChange(B): ', cs, contentB)
+        return Promise.resolve()
       }
 
       master = require('child_process')
@@ -421,7 +435,7 @@ describe('gulf', function() {
 
     it('should correctly propagate the first edit from one end to the other end', function(cb) {
       contentA = 'abcd'
-      docA.update([3, 'd'])
+      docA.submitChange([3, 'd'])
 
       setTimeout(function() {
         expect(docA.content).to.eql(contentA)
@@ -433,15 +447,15 @@ describe('gulf', function() {
 
     it('should correctly propagate edits from one end to the other end', function(cb) {
       contentA = 'abcd123'
-      docA.update([4, '1']) // this edit will be sent
+      docA.submitChange([4, '1']) // this edit will be sent
 
       contentB = 'abcd45'
-      docB.update([4, '4']) // this edit will be sent
+      docB.submitChange([4, '4']) // this edit will be sent
 
       setImmediate(function() {
-        docA.update([5, '2']) // this edit will be queued
-        docA.update([6, '3'])
-        docB.update([5, '5']) // this edit will be queued
+        docA.submitChange([5, '2']) // this edit will be queued
+        docA.submitChange([6, '3'])
+        docB.submitChange([5, '5']) // this edit will be queued
       })
 
       setTimeout(function() {

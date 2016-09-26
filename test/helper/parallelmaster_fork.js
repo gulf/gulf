@@ -4,7 +4,10 @@ var gulf = require('../../')
 
 console._stdout = process.stderr
 
-gulf.Document.create(new gulf.MemoryAdapter, ottype, process.argv[2], function(er, doc) {
+gulf.Document.create(process.argv[2], {
+  storageAdapter: new gulf.MemoryAdapter
+, ottype: ottype})
+.then(function(doc) {
   var mux = MuxDmx()
   process.stdin.pipe(mux).pipe(process.stdout)
 
