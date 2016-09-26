@@ -1,6 +1,7 @@
 # Gulf [![Build Status](https://travis-ci.org/marcelklehr/gulf.png)](https://travis-ci.org/marcelklehr/gulf)
 
 [![Join the chat at https://gitter.im/marcelklehr/gulf](https://badges.gitter.im/marcelklehr/gulf.svg)](https://gitter.im/marcelklehr/gulf?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 OT is too hard on you? The Gulf stream will sync your documents in real-time. Anywhere in the world, in node.js and the browser!
 
 ![Gulf stream (Public domain)](https://upload.wikimedia.org/wikipedia/commons/1/19/Golfstrom.jpg)
@@ -354,20 +355,15 @@ If you're having trouble writing your own adapter, check out [the in-memory adap
 #### Adapter#getRevisionsAfter(docId, editId) : Promise<Array<Revision>>
 
 ## Tests?
+[![Sauce Test Status](https://saucelabs.com/browser-matrix/gulf.svg)](https://saucelabs.com/u/gulf)
 
-### Node.js
-To run the tests in node, run the following after installing the devDependencies:
+### Test-it-yourself
+To run the tests in node and the browser, run the following:
 ```
-npm test
-```
-### Browser
-To run the tests in the browser, browserify gulf:
-
-```
-npm run build
+npm run build && npm run test-local
 ```
 
-and open `test.html` in the browser of your choice.
+(Make sure to open the provided link in the browser of your choice.)
 
 ## License
 (c) 2013-2016 by Marcel Klehr

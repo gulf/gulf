@@ -7,10 +7,11 @@
     "url": "https://github.com/marcelklehr/gulf.git"
   },
   "dependencies": {
+    "babel-runtime": "^6.11.6",
+    "co": "4.x",
     "debug": "^2.2",
-    "setimmediate": "1.x",
     "queue": "3.x",
-    "co": "4.x"
+    "setimmediate": "1.x"
   },
   "keywords": [
     "operational transformation",
@@ -24,16 +25,26 @@
   ],
   "main": "./lib/index",
   "scripts": {
-    "test": "mocha",
-    "build": "browserify test/tests.js > tests.brwsr.js"
+    "test": "mocha test/tests.js; zuul -- test/tests.es5.js",
+    "test-local": "mocha test/tests.js; zuul --local -- test/tests.es5.js",
+    "build": "babel src --out-dir lib; babel test/tests.js --out-file test/tests.es5.js"
+  },
+  "babel": {
+    "presets": [
+      "es2015"
+    ],
+    "plugins": ["transform-runtime"]
   },
   "devDependencies": {
-    "mocha": "3.x",
+    "babel-cli": "6.x",
+    "babel-plugin-transform-runtime": "^6.15.0",
+    "babel-preset-es2015": "6.x",
     "expect.js": "*",
-    "ottypes": "*",
+    "mocha": "3.x",
     "mux-dmx": "*",
+    "ottypes": "*",
     "through2": "*",
-    "browserify": "*"
+    "zuul": "*"
   },
   "author": "Marcel Klehr <mklehr@gmx.net>",
   "license": [

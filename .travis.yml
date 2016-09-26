@@ -1,6 +1,12 @@
 language: node_js
 node_js:
-  - "0.12"
-  - "4"
-  - "5"
-  - "6"
+  - '0.12'
+  - '4'
+  - '5'
+  - '6'
+env:
+  global:
+    - secure: >-
+        KvB7tYp0PtA1gWXamiU7khXWscVu6oZJPJ0sf/d5bS++V9LMgAsCAkHDd48VECmbmSj0gXuIy1P4BedaMXbi2Vjra/yfm3DEfzdLBmQWZ0zytT9wgHPLz0dJfyeSJ97in9XPMGwaSDjTVzWGpUZp3owUWHcMb36LeBrF5Ab9ljA=
+    - secure: >-
+        au3lqZPBIUR0dimodXlutW9TGiEe9W+sB+LGdpcJEatFh9C6pUZmjlD3OoYe8kOdWoeWbOdSGOoGBlFF8RhPuvxTkHsyFqnbkgIBb2NrYYKsRkJx9S4gZwc6vpTI8wiB70WSL9pVAKv51PlLratSXMSOIYWmgwTU5oMheZWNxEQ=
