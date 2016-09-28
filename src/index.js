@@ -1,3 +1,6 @@
+// Promise polyfill
+global.Promise = require('core-js/es6/promise')
+if (typeof window !== 'undefined') window.Promise = global.Promise
 module.exports = {
   Document: require('./Document')
 , EditableDocument: require('./EditableDocument')
@@ -5,3 +8,4 @@ module.exports = {
 , Revision: require('./Revision')
 , MemoryAdapter: require('./MemoryAdapter')
 }
+
