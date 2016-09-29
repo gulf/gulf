@@ -45,7 +45,8 @@
     "mux-dmx": "*",
     "ottypes": "*",
     "through2": "*",
-    "zuul": "*"
+    "zuul": "*",
+    "zuul-ngrok": "4.x"
   },
   "author": "Marcel Klehr <mklehr@gmx.net>",
   "license": [

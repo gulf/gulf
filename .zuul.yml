@@ -1,3 +1,7 @@
+concurrency: 2
+tunnel:
+  type: ngrok
+  bind_tls: true
 ui: mocha-bdd
 browsers:
   - name: firefox
