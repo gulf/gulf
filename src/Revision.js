@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 function Revision(ottype) {
-  this.id
+  this.id = null
   this.parent
   this.changeset
   this.content = null
@@ -37,7 +37,6 @@ Revision.fromJSON = function(json, ottype) {
 
   var r = new Revision(ottype) 
   r.id = json.id
-  if (!r.id) throw new Error('Serialized revision does not have an ID')
   
   r.parent = json.parent
   r.changeset = json.changeset
@@ -49,12 +48,34 @@ Revision.fromJSON = function(json, ottype) {
   return r
 }
 
+Revision.prototype.toJSON = function(withContent) {
+  var o = {
+    parent: this.parent
+  , id: this.id
+  , content: null
+  , author: this.author
+  , type: this.ottype.uri
+  }
+  if(this.changeset) {
+    o.changeset = this.changeset
+  }
+  if (withContent && this.content) {
+    if (this.ottype.serialize) o.content = this.ottype.serialize(this.content)
+    else o.content = this.content
+  }
+  return o
+}
+
+Revision.prototype.serialize = function(withContent) {
+  return JSON.stringify(this.toJSON(withContent))
+}
+
 /**
  * Returns an empty edit.
  */
 Revision.newInitial = function(ottype, content) {
   var edit = new Revision(ottype)
-  edit.id = randString()
+  edit.id = 0
   edit.content = content
   return edit
 }
@@ -64,7 +85,6 @@ Revision.newInitial = function(ottype, content) {
  */
 Revision.newFromChangeset = function(cs, ottype) {
   var edit = new Revision(ottype)
-  edit.id = randString()
   edit.changeset = cs
   return edit
 }
@@ -99,27 +119,6 @@ Revision.prototype.merge = function(edit) {
   return Revision.newFromChangeset(this.ottype.compose(this.changeset, edit.changeset), this.ottype)
 }
 
-Revision.prototype.toJSON = function(withContent) {
-  var o = {
-    parent: this.parent
-  , id: this.id
-  , content: null
-  , author: this.author
-  }
-  if(this.changeset) {
-    o.changeset = this.changeset
-  }
-  if (withContent && this.content) {
-    if (this.ottype.serialize) o.content = this.ottype.serialize(this.content)
-    else o.content = this.content
-  }
-  return o
-}
-
-Revision.prototype.serialize = function(withContent) {
-  return JSON.stringify(this.toJSON(withContent))
-}
-
 Revision.prototype.clone = function() {
   var edit = new Revision(this.ottype)
   edit.id = this.id
@@ -129,12 +128,3 @@ Revision.prototype.clone = function() {
 
   return edit
 }
-
-function randString() {
-  var str = ''
-  while (str.length < 20) {
-    str += (Math.random()*1E7<<0x5).toString(36)
-  }
-  return str
-}
-module.exports.randString = randString

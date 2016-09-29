@@ -53,41 +53,24 @@ module.exports = Document
 Document.prototype = Object.create(EventEmitter.prototype, { constructor: { value: Document }})
 
 /**
- * Creates a new document
- * @param content The initial document contents
- * @param opts The options to be passed to the document
- */
-Document.create = function(content, opts) {
-  var doc = new Document(opts)
-  var rev = Revision.newInitial(doc.ottype, content)
-  return doc.storage.createDocument(rev.toJSON(/*withContent:*/true))
-  .then(function(id) {
-    doc.initialized = true
-    doc.content = content
-    doc.id = id
-    doc.emit('init')
-
-    return doc
-  })
-}
-
-/**
  * Load an existing document
- * @param id The id of the document to load
- * @param opts The options to pass to the document
+ * @returns Promise
  */
-Document.load = function(id, opts) {
-  var doc = new Document(opts)
-  return doc.storage.getLastRevision(id)
-  .then(function(rev) {
-    doc.initialized = true
-    doc.content = rev.content
-    doc.id = id
-    doc.emit('init')
-    
-    return doc
-  })
-}
+Document.prototype.initializeFromStorage = co.wrap(function*(defaultContent) {
+  var revId, rev
+  try {
+    revId = yield this.storage.getLastRevisionId()
+  }catch(e) {}
+  if ('number' !== typeof revId) {
+    rev = Revision.newInitial(this.ottype, defaultContent)
+    yield this.storage.storeRevision(rev)
+  }else{
+    var rev = yield this.storage.getRevision(revId)
+  }
+  this.initialized = true
+  this.content = rev.content
+  this.emit('init')
+})
 
 /**
  * Creates a new Link and attaches it as a slave
@@ -134,10 +117,7 @@ Document.prototype.attachSlaveLink = function(link) {
   this.attachLink(link)
 
   link.on('editError', () => {
-    this.storage.getLastRevision(this.id)
-    .then((latest) => {
-      link.send('init', latest) // we skip toJSON(fromJSON(x)) here
-    })
+    this.receiveRequestInit(link)
     .catch(e => this.emit('error', e))
   })
 
@@ -203,8 +183,9 @@ Document.prototype.receiveRequestInit = co.wrap(function*(link) {
   if(!this.initialized) {
     yield (cb) => this.once('init', cb)
   }
-  const latest = yield this.storage.getLastRevision(this.id)
-  
+  const latestId = yield this.storage.getLastRevisionId()
+  const latest = yield this.storage.getRevision(latestId)
+
   link.send('init', latest) // We skip toJSON(fromJSON(x))
 })
 
@@ -224,7 +205,7 @@ Document.prototype.receiveInit = co.wrap(function*(data, fromLink) {
   this.links.forEach(link => link.reset())
   this.content = initialRev.content
 
-  yield this.storage.storeRevision(this.id, initialRev.toJSON(true))
+  yield this.storage.storeRevision(initialRev.toJSON(true))
   
   // I got an init, so my slaves get one, too
   this.slaves.forEach(function(slave) {
@@ -242,11 +223,24 @@ Document.prototype.receiveInit = co.wrap(function*(data, fromLink) {
  * @param fromLink
  */
 Document.prototype.receiveRequestHistorySince = co.wrap(function*(sinceEditId, fromLink) {
-  const revs = yield this.storage.getRevisionsAfter(this.id, sinceEditId)
   fromLink.reset()
-  revs
+  (yield this.getRevisionsAfter(sinceEditId))
   .map((r) => Revision.fromJSON(r, this.ottype))
   .forEach((rev) => fromLink.sendEdit(rev))
+})
+
+/**
+ * Get all revisions after x
+ * @param x the id of the edit after which edits are collected
+ * @returns Promise<Array<Revision>>
+ */
+Document.prototype.getRevisionsAfter = co.wrap(function*(afterId){
+  const lastId = yield this.storage.getLastRevisionId()
+  const requestIds = []
+  for (var i=afterId+1; i <= lastId; i++) requestIds.push(i)
+  
+  return (yield requestIds.map((id) => this.storage.getRevision(id)))
+  .map((rev) => Revision.fromJSON(rev, this.ottype))
 })
 
 /**
@@ -297,30 +291,17 @@ Document.prototype.dispatchEdit = co.wrap(function*(edit, fromLink) {
     })
     return
   }
-
-  const sendAck = () => {
-    // If I'm master then we need to queue the ack
-    // Slaves have to send it straight away
-    if(fromLink === this.master) fromLink.send('ack', edit.id)
-    else if (fromLink) fromLink.sendAck(edit.id)
-  }
   
   if(!this.initialized) {
     yield (cb) => this.once('init', () => cb())
   }
 
-  var alreadyExists = yield this.storage.existsRevision(this.id, edit.id)
-  if (alreadyExists) {
-    sendAck()
-    return
-  }
+  const lastRevId = yield this.storage.getLastRevisionId()
 
-  var parentExists = yield this.storage.existsRevision(this.id, edit.parent)
-  if (!parentExists) {
+  if (edit.parent > lastRevId) {
     if(fromLink === this.master) {
       // we probably missed some edits, let's ask master!
-      var latestRev = yield this.storage.getLastRevision(this.id)
-      this.master.send('requestHistorySince', latestRev.id)
+      this.master.send('requestHistorySince', lastRevId)
       return // We drop the edit
     }else {
       // I'm master, I can't have missed that edit. So, throw and re-init!
@@ -338,10 +319,15 @@ Document.prototype.dispatchEdit = co.wrap(function*(edit, fromLink) {
   }
 
   // add to history
+  edit.id = lastRevId+1
   edit.content = this.content
-  yield this.storage.storeRevision(this.id, edit.toJSON(true))
+  yield this.storage.storeRevision(edit.toJSON(true))
 
-  sendAck()
+  // If I'm master then we need to queue the ack
+  // Slaves have to send it straight away
+  if(fromLink === this.master) fromLink.send('ack', edit.id)
+  else if (fromLink) fromLink.sendAck(edit.id)
+  
   this.distributeEdit(edit, fromLink)
   this.emit('commit', edit, /*ownEdit:*/false)  
 })
@@ -358,17 +344,16 @@ Document.prototype.sanitizeEdit = co.wrap(function*(edit, fromLink, cb) {
   }else {
     // We are master!
 
-    // Transform against missed edits from history that have happened in the meantime
-    const missed = yield this.storage.getRevisionsAfter(this.id, edit.parent)
+    // Transform against missed edits from history that have happened in the meantime 
+    const missed = yield this.getRevisionsAfter(edit.parent)
 
     missed
-    .map(rev => Revision.fromJSON(rev, this.ottype))
     .forEach((oldRev) => {
       try {
         debug('sanitize', 'transform', edit, oldRev)
         edit.follow(oldRev)
       }catch(e) {
-        e.message = 'Transforming '+edit.id+' against '+oldRev.id+' failed: '+e.message
+        e.message = 'Transforming edit against '+oldRev.id+' failed: '+e.message
         throw e
       }
     })

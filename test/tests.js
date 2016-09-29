@@ -12,10 +12,12 @@ describe('gulf', function() {
     var linkA, linkB
 
     before(function(cb) {
-      gulf.Document.create('abc', {
+      var doc = new gulf.Document({
         storageAdapter: new gulf.MemoryAdapter
       , ottype: ottype
-      }).then(function(doc) {
+      })
+      doc.initializeFromStorage('abc')
+      .then(function() {
         docA = doc
         docB = new gulf.Document({
           storageAdapter: new gulf.MemoryAdapter
@@ -44,10 +46,12 @@ describe('gulf', function() {
     var content
 
     before(function(cb) {
-      gulf.Document.create(initialContent, {
+      var doc = new gulf.Document({
         storageAdapter: new gulf.MemoryAdapter
       , ottype: ottype
-      }).then(function(doc) {
+      })
+      doc.initializeFromStorage(initialContent)
+      .then(function() {
         docA = doc
         docB = new gulf.EditableDocument({storageAdapter: new gulf.MemoryAdapter, ottype: ottype})
 
@@ -145,10 +149,12 @@ describe('gulf', function() {
     var contentA, contentB
 
     before(function(cb) {
-      gulf.Document.create(initialContent, {
+      var doc = new gulf.Document({
         storageAdapter: new gulf.MemoryAdapter
       , ottype: ottype
-      }).then(function(doc) {
+      })
+      doc.initializeFromStorage(initialContent)
+      .then(function() {
         masterDoc = doc
 
         docA = new gulf.EditableDocument({storageAdapter: new gulf.MemoryAdapter, ottype: ottype})
@@ -269,14 +275,17 @@ describe('gulf', function() {
   })
 
   describe('Linking to documents protected by authentication', function() {
+    var initialContent = 'abc'
     var docA, docB
     var linkA, linkB
 
     beforeEach(function(done) {
-      gulf.Document.create('abc', {
+      var doc = new gulf.Document({
         storageAdapter: new gulf.MemoryAdapter
       , ottype: ottype
-      }).then(function(doc) {
+      })
+      doc.initializeFromStorage(initialContent)
+      .then(function() {
         docA = doc
         docB = new gulf.Document({storageAdapter: new gulf.MemoryAdapter, ottype: ottype})
         linkA = docA.slaveLink({
@@ -313,13 +322,15 @@ describe('gulf', function() {
   describe('Linking to documents protected by write authorization', function() {
     var docA, docB
     var linkA, linkB
-    var initialContents = 'abc'
+    var initialContent = 'abc'
 
     beforeEach(function(cb) {
-      gulf.Document.create(initialContents, {
+      var doc = new gulf.Document({
         storageAdapter: new gulf.MemoryAdapter
       , ottype: ottype
-      }).then(function(doc) {
+      })
+      doc.initializeFromStorage(initialContent)
+      .then(function() {
         docA = doc
         docB = new gulf.EditableDocument({storageAdapter: new gulf.MemoryAdapter, ottype: ottype})
         docB._setContent = function(content) {return Promise.resolve()}
@@ -358,7 +369,7 @@ describe('gulf', function() {
       }, 100)
 
       setTimeout(function() {
-        expect(docB.content).to.eql(initialContents)
+        expect(docB.content).to.eql(initialContent)
         done()
       }, 200)
     })

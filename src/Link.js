@@ -28,6 +28,8 @@ var SECONDS = 1000
 function Link (opts) {
   if(!opts) opts = {}
   this.timeout = opts.timeout || 10*SECONDS
+  this.localTransmissionId = 0
+  this.lastRemoteTransmissionId = null
   this.credentials = opts.credentials
   this.authenticateFn = opts.authenticate
   this.authorizeReadFn = opts.authorizeRead
@@ -120,7 +122,11 @@ Link.prototype.sendUnauthorized = function() {
  * @param cb {Function} Get callback when the edit has been acknowledged (optional)
  */
 Link.prototype.sendEdit = function(edit) {
+  // Create promise and attach callback (to be resolved once the ACK arrives)
   const promise = new Promise((resolve) => edit.callback = resolve)
+
+  // Attach transmissionId
+  edit.transmissionId = ++this.localTransmissionId
 
   if(this.queue.length || this.sentEdit) {
     this.queue.push(['edit', edit])
@@ -229,7 +235,6 @@ Link.prototype.onwrite = function(data, cb) {
   .then((authorized) => {
     if(!authorized) {
       this.sendUnauthorized()
-      cb()
       return
     }
 
@@ -257,10 +262,17 @@ Link.prototype.onwrite = function(data, cb) {
       }.bind(this))
     }
 
+    if (args[0] === 'edit') {
+      if (this.lastRemoteTransmissionId && args[1].transmissionId === this.lastRemoteTransmissionId) {
+        return
+      }
+      this.lastTransmissionId = args[1].transmissionId
+    }
+
     args[0] = 'link:'+args[0]
     this.emit.apply(this, args)
-    cb()
   })
+  .then(cb)
   .catch((e) => {
     this.emit('error', e)
   })

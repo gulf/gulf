@@ -45,7 +45,7 @@ EditableDocument.prototype.receiveInit = co.wrap(function*(data, fromLink) {
   this.master.reset()
   this.content = initialRev.content
 
-  yield this.storage.storeRevision(this.id, initialRev)
+  yield this.storage.storeRevision(initialRev)
 
   try {
     yield this._setContent(this.content)
@@ -69,13 +69,13 @@ EditableDocument.prototype.submitChange = co.wrap(function*(cs) {
   const edit = Revision.newFromChangeset(cs, this.ottype)
  
   try {
-    var lastRev = yield this.storage.getLastRevision(this.id)
+    var lastRevId = yield this.storage.getLastRevisionId()
   }catch(e) {
     this.emit('error', e)
     throw e
   }
 
-  edit.parent = lastRev.id
+  edit.parent = lastRevId
 
   this.emit('submit', edit)
 
@@ -110,7 +110,7 @@ EditableDocument.prototype.submitChange = co.wrap(function*(cs) {
   committedEdit.content = this.content
   
   try {
-    yield this.storage.storeRevision(this.id, committedEdit.toJSON(true))  
+    yield this.storage.storeRevision(committedEdit.toJSON(true))  
   }catch(e) {
     this.emit('error', e)
     throw e
@@ -126,6 +126,7 @@ EditableDocument.prototype.applyEdit = co.wrap(function*(edit, ownEdit) {
   try {
     this.content = edit.apply(this.content)
 
+    // Very important! Bail early. Pending edits have been updated in submitChange()
     if(ownEdit) return
     
     // Collect undetected local changes, before applying the new edit

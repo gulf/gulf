@@ -22,36 +22,22 @@ function MemoryAdapter() {
 }
 module.exports = MemoryAdapter
 
-MemoryAdapter.prototype.createDocument = function(initialRev) {
-  this.reset()
-  return this.storeRevision(null, initialRev)
+MemoryAdapter.prototype.reset = function() {
+  this.history = []
+  this.lastId = 0
 }
 
-MemoryAdapter.prototype.getLastRevision = function(docId) {
-  if(!this.history.length) return Promise.resolve()
-  const o = this.snapshots[this.history[this.history.length-1]]
-  return Promise.resolve(o)
+MemoryAdapter.prototype.getLastRevisionId = function(docId) {
+  if(!this.history.length) return Promise.reject()
+  return Promise.resolve(this.lastId)
 }
 
-MemoryAdapter.prototype.storeRevision = function(docId, rev) {
-  this.history.push(rev.id)
-  this.snapshots[rev.id] = rev
+MemoryAdapter.prototype.storeRevision = function(rev) {
+  this.history[rev.id] = rev
+  this.lastId = rev.id
   return Promise.resolve()
 }
 
-MemoryAdapter.prototype.reset = function() {
-  this.snapshots = {}
-  this.history = []
-}
-
-MemoryAdapter.prototype.existsRevision = function(docId, editId) {
-  return Promise.resolve(!!this.snapshots[editId])
-}
-
-MemoryAdapter.prototype.getRevisionsAfter = function(docId, editId) {
-  var arr = []
-  for(var i = this.history.indexOf(editId)+1; i < this.history.length; i++) {
-    arr.push(this.snapshots[this.history[i]])
-  }
-  return Promise.resolve(arr)
+MemoryAdapter.prototype.getRevision = function(editId) {
+  return Promise.resolve(this.history[editId])
 }
