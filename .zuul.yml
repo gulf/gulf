@@ -1,4 +1,4 @@
-concurrency: 2
+concurrency: 1
 tunnel:
   type: ngrok
   bind_tls: true
