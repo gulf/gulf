@@ -21,6 +21,7 @@ function Revision(ottype) {
   this.changeset
   this.content = null
   this.author
+  this.meta
   this.ottype = ottype
   if(!ottype) throw new Error('Revision: No ottype specified')
 }
@@ -41,6 +42,7 @@ Revision.fromJSON = function(json, ottype) {
   r.parent = json.parent
   r.changeset = json.changeset
   r.author = json.author
+  r.meta = json.meta
   if (json.content) {
     if(ottype.deserialize) r.content = ottype.deserialize(json.content)
     else r.content = json.content
@@ -54,6 +56,7 @@ Revision.prototype.toJSON = function(withContent) {
   , id: this.id
   , content: null
   , author: this.author
+  , meta: this.meta
   , type: this.ottype.uri
   }
   if(this.changeset) {

@@ -63,10 +63,11 @@ EditableDocument.prototype.receiveInit = co.wrap(function*(data, fromLink) {
  *
  * @param cs A changeset that can be swallowed by the ottype
  */
-EditableDocument.prototype.submitChange = co.wrap(function*(cs) {
+EditableDocument.prototype.submitChange = co.wrap(function*(cs, meta) {
   if(null === this.content) throw new Error('Document has not been initialized')
 
   const edit = Revision.newFromChangeset(cs, this.ottype)
+  edit.meta = meta
  
   try {
     var lastRevId = yield this.storage.getLastRevisionId()
