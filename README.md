@@ -1,15 +1,15 @@
-# Gulf [![Build Status](https://travis-ci.org/marcelklehr/gulf.png)](https://travis-ci.org/marcelklehr/gulf)
+# Gulf [![Build Status](https://travis-ci.org/gulf/gulf.png)](https://travis-ci.org/gulf/gulf)
 
-[![Join the chat at https://gitter.im/marcelklehr/gulf](https://badges.gitter.im/marcelklehr/gulf.svg)](https://gitter.im/marcelklehr/gulf?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/gulf/gulf](https://badges.gitter.im/gulf/gulf.svg)](https://gitter.im/gulf/gulf?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 OT is too hard on you? The Gulf stream will sync your documents in real-time. Anywhere in the world, in node.js and the browser!
 
 ![Gulf stream (Public domain)](https://upload.wikimedia.org/wikipedia/commons/1/19/Golfstrom.jpg)
 
-**Notice: This is the master branch and has the upcominging changes for v5.x, to find the docs for v4.x go to [stable](https://github.com/marcelklehr/gulf/tree/stable)!**
+**Notice: This is the master branch and has the upcominging changes for v5.x, to find the docs for v4.x go to [stable](https://github.com/gulf/gulf/tree/stable)!**
 
 ### How?
-You choose an [OT](https://en.wikipedia.org/wiki/Operational_transformation) [type](https://github.com/marcelklehr/gulf#operational-transform-bling) algorithm, gulf will sync your documents.
+You choose an [OT](https://en.wikipedia.org/wiki/Operational_transformation) [type](https://github.com/gulf/gulf#operational-transform-bling) algorithm, gulf will sync your documents.
 
 ## Show me!
 
@@ -72,11 +72,11 @@ Since adding gulf syncing to an editor is a repetitive task and hard to get righ
 
 The following bindings are available:
 
- * [contenteditable](https://github.com/marcelklehr/gulf-contenteditable) (using DOM OT; eg. CKeditor)
- * [textarea/textinput](https://github.com/marcelklehr/gulf-textarea) (using text OT)
- * [codemirror](https://github.com/marcelklehr/gulf-codemirror) (using text OT)
- * [socialcalc](https://github.com/marcelklehr/gulf-socialcalc) (using socialcalc OT)
- * [quill](https://github.com/marcelklehr/gulf-quill) (using rich text OT)
+ * [contenteditable](https://github.com/gulf/gulf-contenteditable) (using DOM OT; eg. CKeditor)
+ * [textarea/textinput](https://github.com/gulf/gulf-textarea) (using text OT)
+ * [codemirror](https://github.com/gulf/gulf-codemirror) (using text OT)
+ * [socialcalc](https://github.com/gulf/gulf-socialcalc) (using socialcalc OT)
+ * [quill](https://github.com/gulf/gulf-quill) (using rich text OT)
 
 ### Above and Beyond
 Check out [Hive.js](http://hivejs.org) a collaboration platform with gulf at its core.
@@ -160,8 +160,8 @@ You can use [shareJS's built in ottypes](https://github.com/share/ottypes) or  [
 Gulf allows you to store your data anywhere you like, if you can provide it with a storage adapter. It comes with an in-memory adapter, ready for you to test your app quickly, but when the time comes to get ready for production you will want to change to a persistent storage backend like mongoDB or redis.
 
 Currently implemented adapters are:
- * [In-memory adapter](https://github.com/marcelklehr/gulf/blob/master/lib/MemoryAdapter.js)
- * [mongoDB adapter](https://github.com/marcelklehr/gulf-mongodb)
+ * [In-memory adapter](https://github.com/gulf/gulf/blob/master/lib/MemoryAdapter.js)
+ * [mongoDB adapter](https://github.com/gulf/gulf-mongodb)
 
 If you'd like to write your own storage adapter, head on to the API docs.
 
@@ -172,7 +172,7 @@ It's probably easiest to observe gulf in action. So, have a look at these exampl
  * https://github.com/marcelklehr/warp -- a complete web server serving a collaborative editor, driven by CKeditor, sockJS and gulf-contenteditable
  * http://openevocracy.org/ -- a new take on democratic decision-making, with gulf as the real-time editing engine.
 
-**Additions wanted:** If you have the perfect example show-casing gulf or its related libraries leave me a note via email or [the issues](https://github.com/marcelklehr/gulf/issues).
+**Additions wanted:** If you have the perfect example show-casing gulf or its related libraries leave me a note via email or [the issues](https://github.com/gulf/gulf/issues).
 
 ## API
 
@@ -345,7 +345,7 @@ A revision is an object that looks like this:
 }
 ```
 
-If you're having trouble writing your own adapter, check out [the in-memory adapter](https://github.com/marcelklehr/gulf/blob/master/lib/MemoryAdapter.js) and the [mongoDB adapter](https://github.com/marcelklehr/gulf-mongodb).
+If you're having trouble writing your own adapter, check out [the in-memory adapter](https://github.com/gulf/gulf/blob/master/lib/MemoryAdapter.js) and the [mongoDB adapter](https://github.com/gulf/gulf-mongodb).
 
 #### Adapter#getLastRevisionId() : Promise<Number>
 #### Adapter#storeRevision(revision:Object) : Promise
