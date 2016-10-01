@@ -20,10 +20,11 @@ You choose an [OT](https://en.wikipedia.org/wiki/Operational_transformation) [ty
 var textOT = require('ot-text').type
 
 // Create a new master document
-var doc = gulf.Document.create('abc', {
+var doc = new gulf.Document({
   storageAdapter: new gulf.MemoryAdapter,
   ottype: textOT
 })
+doc.initializeFromStorage('abc') // Optionally supply default content
 
 // Set up a server
 ws.createServer(function(socket) {
@@ -31,7 +32,6 @@ ws.createServer(function(socket) {
   var slave = doc.slaveLink()
 
   // now, add the new client as a slave
-  // of alice's document
   socket.pipe(slave).pipe(socket)
 })
 ```
@@ -58,7 +58,7 @@ ws.connect(function(socket) {
   // create a link to the master
   var master = doc.masterLink()
 
-  // connect bob's document to Alice's master document
+  // connect to master document
   socket.pipe(master).pipe(socket)
 })
 ```
@@ -232,10 +232,7 @@ Fired when an edit has been committed (confirmed with master, applied locally an
 #### new gulf.Document(opts: Object({adapter, ottype}))
 Instantiates a new, empty Document.
 
-#### gulf.Document.create(content, opts:Object): Document
-Creates a documents with pre-set contents. `opts` will be passed to the Document constructor.
-
-#### gulf.Document.load(documentId, opts:Object): Document
+#### gulf.Document#initializeFromStorage([initialContent]): Promise
 Loads a document from the storage. `opts` will be passed to the Document constructor.
 
 #### gulf.Document#slaveLink(opts:Object) : Link
@@ -249,6 +246,8 @@ Attaches an existing link as master.
 
 #### gulf.Document#attachSlaveLink(link:Link)
 Attaches an existing link as a slave.
+
+### Internal methods:
 
 #### gulf.Document#receiveInit(data:Object, fromLink:Link):Promise
 Listener function that gets called when a link attached to this document receives an `init` message. `data` could look like this: `{contents: 'abc', edit: '<Edit>'}`
@@ -307,13 +306,13 @@ Needs to be implemented by you or by wrappers (see [Editor wrappers](#editor-wra
 instantiates a new edit without parent, changes or id. Thus it's pretty useless.
 
 #### gulf.Revision.fromJSON(json:String, ottype) : Revision
-Deserializes an edit that was serialized using `gulf.Edit#toJSON()`.
+Deserializes an edit that was serialized using `gulf.Revision#toJSON()`.
 
-#### gulf.Revision.newInitial(ottype) : Revision
-Creates a new initial edit with a random id. Initial edits carry an id but no changes.
+#### gulf.Revision.newInitial(ottype, initialContent) : Revision
+Creates a new initial edit. Initial revisions carry content  but no changes.
 
 #### gulf.Revision.newFromChangeset(cs:mixed, ottype) : Revision
-Creates a new edit with a random id and changes set to `cs`.
+Creates a new edit with changes set to `cs`.
 
 #### gulf.Revision#apply(documentContents)
 Applies this edit on a document snapshot.
@@ -338,9 +337,9 @@ A revision is an object that looks like this:
 
 ```js
 {
-  id: 'sdgh684eb68eth'
+  id: 48
 , changeset: [0, "h"]
-, parent: '5dfhg68aefh65ae' // ID of another snapshot
+, parent: 47 // ID of this revision's parent
 , content: '"Hello world"' // stringified representation of the new contents
 , author: 12 // The id of the author, as returned by `opts.authenticate` in the Link options (or the value you passed to gulf.Document#receiveEdit, if you passed in the edit directly)
 }
@@ -348,11 +347,9 @@ A revision is an object that looks like this:
 
 If you're having trouble writing your own adapter, check out [the in-memory adapter](https://github.com/marcelklehr/gulf/blob/master/lib/MemoryAdapter.js) and the [mongoDB adapter](https://github.com/marcelklehr/gulf-mongodb).
 
-#### Adapter#createDocument(initialSnapshot) : Promise<DocumentId>
-#### Adapter#getLastRevision(docId) : Promise<Revision>
-#### Adapter#storeRevision(docId, revision) : Promise
-#### Adapter#existsRevision(docId, editId) : Promise<Boolean>
-#### Adapter#getRevisionsAfter(docId, editId) : Promise<Array<Revision>>
+#### Adapter#getLastRevisionId() : Promise<Number>
+#### Adapter#storeRevision(revision:Object) : Promise
+#### Adapter#getRevision(revId:Number) : Promise<Object>
 
 ## Tests?
 [![Sauce Test Status](https://saucelabs.com/browser-matrix/gulf.svg)](https://saucelabs.com/u/gulf)
