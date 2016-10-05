@@ -65,18 +65,20 @@ ws.connect(function(socket) {
 
 And you have a collaborative editor!
 
-### Extensions
+### Editor bindings
 You can sync any document type you have an ot type implementation and an editor for.
 
 Since adding gulf syncing to an editor is a repetitive task and hard to get right (what with selection retention, generating diffs, etc.) there are ready-made bindings for you!
 
 The following bindings are available:
 
- * [contenteditable](https://github.com/gulf/gulf-contenteditable) (using DOM OT; eg. CKeditor)
- * [textarea/textinput](https://github.com/gulf/gulf-textarea) (using text OT)
- * [codemirror](https://github.com/gulf/gulf-codemirror) (using text OT)
- * [socialcalc](https://github.com/gulf/gulf-socialcalc) (using socialcalc OT)
- * [quill](https://github.com/gulf/gulf-quill) (using rich text OT)
+ * [contenteditable](https://github.com/gulf/gulf-editor-contenteditable) (using DOM OT; eg. CKeditor)
+ * [textarea/textinput](https://github.com/gulf/gulf-editor-textarea) (using text OT)
+ * [codemirror](https://github.com/gulf/gulf-editor-codemirror) (using text OT)
+ * [socialcalc](https://github.com/gulf/gulf-editor-socialcalc) (using socialcalc OT)
+ * [quill](https://github.com/gulf/gulf-editor-quill) (using rich text OT)
+
+If you want to create a binding yourself, please follow the API of the existing modules (ie. expose a single class extending EditableDocument and taking an additional option called `editorInstance`. And don't forget to implement `EditableDocument#close()`!). Also, make sure to name the npm package like this: `gulf-editor-your-name-here`
 
 ### Above and Beyond
 Check out [Hive.js](http://hivejs.org) a collaboration platform with gulf at its core.
@@ -161,9 +163,9 @@ Gulf allows you to store your data anywhere you like, if you can provide it with
 
 Currently implemented adapters are:
  * [In-memory adapter](https://github.com/gulf/gulf/blob/master/lib/MemoryAdapter.js)
- * [mongoDB adapter](https://github.com/gulf/gulf-mongodb)
+ * [blob store adapter](https://github.com/gulf/gulf-backend-blob-store)
 
-If you'd like to write your own storage adapter, head on to the API docs.
+If you'd like to write your own storage adapter, head on to the API docs below and be sure to name it like this: `gulf-backend-your-name-here`
 
 ## Examples / Gulf in the wild
 It's probably easiest to observe gulf in action. So, have a look at these examples.
@@ -291,14 +293,17 @@ Fired when EditableDocument#update() has been called, but before the changes hav
 
 **Note:** If queue merging is enabled, the supplied edit may be merged with other outstanding edits before being sent to the server. Thus, if queue merging is enabled, it is not guaranteed that you will get a `commit` event for every edit that you got an `update` event for.
 
+#### gulf.EditableDocument#close()
+An EditableDocument consumer can call this to tear down the connection between EditableDocument and editor.
+
 #### gulf.EditableDocument#_onChange(cs:mixed) : Promise
-Needs to be implemented by you or by wrappers (see [Editor wrappers](#editor-wrappers)). Is called after the document has been initialized with `_setContents` for every change that is received from master.
+Needs to be implemented by you or by wrappers (see [Editor bindings](#editor-bindings)). Is called after the document has been initialized with `_setContents` for every change that is received from master.
 
 #### gulf.EditableDocument#_setContent(content:mixed) : Promise
-Needs to be implemented by you or by wrappers (see [Editor wrappers](#editor-wrappers)). Is called if the document receives an `init` message or to reset the document in case of an error.
+Needs to be implemented by you or by wrappers (see [Editor bindings](#editor-bindings)). Is called if the document receives an `init` message or to reset the document in case of an error.
 
 #### gulf.EditableDocument#_onBeforeChange() : Promise
-Needs to be implemented by you or by wrappers (see [Editor wrappers](#editor-wrappers)). Is called right before `_onChange()` is called to keep track of any outstanding changes.
+Needs to be implemented by you or by wrappers (see [Editor bindings](#editor-bindings)). Is called right before `_onChange()` is called to keep track of any outstanding changes.
 
 ### Class: gulf.Revision
 
@@ -333,6 +338,8 @@ Serializes this edit.
 Returns a new edit instance that has exactly the same properties as this one.
 
 ### Adapter
+Gulf storage adapters are provided in npm packages that are named `gulf-backend-yournamehere`.
+They deal with revision objects.
 A revision is an object that looks like this:
 
 ```js
@@ -345,7 +352,7 @@ A revision is an object that looks like this:
 }
 ```
 
-If you're having trouble writing your own adapter, check out [the in-memory adapter](https://github.com/gulf/gulf/blob/master/lib/MemoryAdapter.js) and the [mongoDB adapter](https://github.com/gulf/gulf-mongodb).
+If you're having trouble writing your own adapter, check out [the in-memory adapter](https://github.com/gulf/gulf/blob/master/lib/MemoryAdapter.js) and the [blob store adapter](https://github.com/gulf/gulf-backend-blob-store).
 
 #### Adapter#getLastRevisionId() : Promise<Number>
 #### Adapter#storeRevision(revision:Object) : Promise
