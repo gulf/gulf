@@ -6,8 +6,6 @@ Operational transformation is a set of algorithms that allow you to sync documen
 
 ![Gulf stream (Public domain)](https://upload.wikimedia.org/wikipedia/commons/1/19/Golfstrom.jpg)
 
-**Notice: This is the master branch and has the upcominging changes for v5.x, to find the docs for v4.x go to [stable](https://github.com/gulf/gulf/tree/stable)!**
-
 ## Background
 This project evolved from my determination to replace Etherpad with something better. Gulf was the smallest core of code that I felt comfortable extracting out of my prototypes. Unfortunately, I took a lot of detours before I could finish "something better" and eventually discovered something better than OT itself: CRDT. Gulf is thus relic, of sorts.
 

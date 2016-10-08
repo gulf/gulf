@@ -1,6 +1,6 @@
 {
   "name": "gulf",
-  "version": "4.1.2",
+  "version": "5.0.0",
   "description": "transport-agnostic operational transformation control layer",
   "repository": {
     "type": "git",
@@ -35,7 +35,9 @@
     "presets": [
       "es2015"
     ],
-    "plugins": ["transform-runtime"]
+    "plugins": [
+      "transform-runtime"
+    ]
   },
   "devDependencies": {
     "babel-cli": "6.x",
