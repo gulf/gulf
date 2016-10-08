@@ -18,6 +18,7 @@
 var debug = require('debug')('gulf')
 var Link = require('./Link')
   , Revision = require('./Revision')
+  , MemoryAdapter = require('./MemoryAdapter')
   , queue = require('queue')
   , EventEmitter = require('events').EventEmitter
   , co = require('co')
@@ -27,9 +28,10 @@ function Document(options) {
   this.id
   this.options = {
     mergeQueue: true
+  , storageAdapter: new MemoryAdapter
   }
   for (var prop in options) this.options[prop] = options[prop]
-  this.storage = this.options.storageAdapter
+  this.storage = this.options.storageAdapter 
   this.ottype = this.options.ottype
 
   this.content = null

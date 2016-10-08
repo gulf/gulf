@@ -231,8 +231,8 @@ Fired when the document has received an `init` message containing a snapshot, ha
 #### Event: commit (edit:Revision, ownEdit:Boolean)
 Fired when an edit has been committed (confirmed with master, applied locally and stored). `ownEdit` tells you if `edit` was submitted by this document or was received from a different document.
 
-#### new gulf.Document(opts: Object({adapter, ottype}))
-Instantiates a new, empty Document.
+#### new gulf.Document(opts: Object({ottype, [storageAdapter]}))
+Instantiates a new, empty Document. `storageAdapter` is optional and defaults to a new instance of `gulf.MemoryAdapter`
 
 #### gulf.Document#initializeFromStorage([initialContent]): Promise
 Loads a document from the storage. `opts` will be passed to the Document constructor.
