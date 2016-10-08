@@ -366,6 +366,8 @@ npm run build && npm run test-local
 GNU Lesser General Public License
 
 ## Changelog
+v5.0.0
+ * Complete refactoring and API overhaul
 
 v4.1.0
  * EditableDoc: add Event `editableInitialized`
