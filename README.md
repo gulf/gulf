@@ -2,16 +2,16 @@
 
 [![Join the chat at https://gitter.im/gulf/gulf](https://badges.gitter.im/gulf/gulf.svg)](https://gitter.im/gulf/gulf?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-OT is too hard on you? The Gulf stream will sync your documents in real-time. Anywhere in the world, in node.js and the browser!
+Operational transformation is a set of algorithms that allow you to sync documents. It's what Google Docs and Etherpad use for real-time collaboration. Gulf is a unixy ("do one thing and do it well") take on collaborative editing, by connecting documents with Node.js streams and employing OT to resolve conflicts automatically.
 
 ![Gulf stream (Public domain)](https://upload.wikimedia.org/wikipedia/commons/1/19/Golfstrom.jpg)
 
 **Notice: This is the master branch and has the upcominging changes for v5.x, to find the docs for v4.x go to [stable](https://github.com/gulf/gulf/tree/stable)!**
 
-### How?
-You choose an [OT](https://en.wikipedia.org/wiki/Operational_transformation) [type](https://github.com/gulf/gulf#operational-transform-bling) algorithm, gulf will sync your documents.
+## Background
+This project evolved from my determination to replace Etherpad with something better. Gulf was the smallest core of code that I felt comfortable extracting out of my prototypes. Unfortunately, I took a lot of detours before I could finish "something better" and eventually discovered something better than OT itself: CRDT. Gulf is thus relic, of sorts.
 
-## Show me!
+## Usage
 
 ```js
 /*
@@ -64,24 +64,6 @@ ws.connect(function(socket) {
 ```
 
 And you have a collaborative editor!
-
-### Editor bindings
-You can sync any document type you have an ot type implementation and an editor for.
-
-Since adding gulf syncing to an editor is a repetitive task and hard to get right (what with selection retention, generating diffs, etc.) there are ready-made bindings for you!
-
-The following bindings are available:
-
- * [contenteditable](https://github.com/gulf/gulf-editor-contenteditable) (using DOM OT; eg. CKeditor)
- * [textarea/textinput](https://github.com/gulf/gulf-editor-textarea) (using text OT)
- * [codemirror](https://github.com/gulf/gulf-editor-codemirror) (using text OT)
- * [socialcalc](https://github.com/gulf/gulf-editor-socialcalc) (using socialcalc OT)
- * [quill](https://github.com/gulf/gulf-editor-quill) (using rich text OT)
-
-If you want to create a binding yourself, please follow the API of the existing modules (ie. expose a single class extending EditableDocument and taking an additional option called `editorInstance`. And don't forget to implement `EditableDocument#close()`!). Also, make sure to name the npm package like this: `gulf-editor-your-name-here`
-
-### Above and Beyond
-Check out [Hive.js](http://hivejs.org) a collaboration platform with gulf at its core.
 
 ## Usage
 
@@ -153,10 +135,21 @@ A document can have many slaves, but only one master link (EditableDocuments hav
 
 Now that we've connected all documents, every time Alice or Bob make a change the edits will just flow to the other documents.
 
-## Operational transform
-Gulf expects you to provide an OT library that adhere's to [shareJs's OT type spec](https://github.com/share/ottypes#spec).
+## Related packages
+### Editor bindings
+You can sync any document type you have an ot type implementation and an editor for.
 
-You can use [shareJS's built in ottypes](https://github.com/share/ottypes) or  [some other](https://github.com/marcelklehr/changesets) [libraries](https://github.com/marcelklehr/dom-ot).
+Since adding gulf syncing to an editor is a repetitive task and hard to get right (what with selection retention, generating diffs, etc.) there are ready-made bindings for you!
+
+The following bindings are available:
+
+ * [contenteditable](https://github.com/gulf/gulf-editor-contenteditable) (using DOM OT; eg. CKeditor)
+ * [textarea/textinput](https://github.com/gulf/gulf-editor-textarea) (using text OT)
+ * [codemirror](https://github.com/gulf/gulf-editor-codemirror) (using text OT)
+ * [socialcalc](https://github.com/gulf/gulf-editor-socialcalc) (using socialcalc OT)
+ * [quill](https://github.com/gulf/gulf-editor-quill) (using rich text OT)
+
+If you want to create a binding yourself, please follow the API of the existing modules (ie. expose a single class extending EditableDocument and taking an additional option called `editorInstance`. And don't forget to implement `EditableDocument#close()`!). Also, make sure to name the npm package like this: `gulf-editor-your-name-here`
 
 ## Storage adapters
 Gulf allows you to store your data anywhere you like, if you can provide it with a storage adapter. It comes with an in-memory adapter, ready for you to test your app quickly, but when the time comes to get ready for production you will want to change to a persistent storage backend like mongoDB or redis.
