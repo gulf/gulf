@@ -25,6 +25,9 @@
     "shareJS"
   ],
   "main": "./lib/index",
+  "files": [
+    "lib/"
+  ],
   "scripts": {
     "test-browser-cloud": "mocha test/tests.js && zuul -- test/tests.es5.js",
     "test-browser-local": " zuul --local -- test/tests.es5.js",
