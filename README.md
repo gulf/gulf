@@ -155,6 +155,7 @@ Gulf allows you to store your data anywhere you like, if you can provide it with
 Currently implemented adapters are:
  * [In-memory adapter](https://github.com/gulf/gulf/blob/master/lib/MemoryAdapter.js)
  * [blob store adapter](https://github.com/gulf/gulf-backend-blob-store)
+ * [mongodb adapter using mongoskin](https://github.com/openevocracy/gulf-mongoskin)
 
 If you'd like to write your own storage adapter, head on to the API docs below and be sure to name it like this: `gulf-backend-your-name-here`
 
