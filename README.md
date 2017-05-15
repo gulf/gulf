@@ -9,6 +9,8 @@ Operational transformation is a set of algorithms that allow you to sync documen
 ## Background
 This project evolved from my determination to replace Etherpad with something better. Gulf was the smallest core of code that I felt comfortable extracting out of my prototypes. Unfortunately, I took a lot of detours before I could finish "something better" and eventually discovered something better than OT itself: CRDT. Gulf is thus relic, of sorts.
 
+Nonetheless, it's finished and works splendidly. (The tests are failing due to entropy, which I haven't bothered to account for.) So, if you really need OT: Happy syncing!
+
 ## Usage
 
 ```js
